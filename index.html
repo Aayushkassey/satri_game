@@ -1,420 +1,448 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Color Flash Challenge | SATRI</title>
     <style>
-        :root {
-            --primary-blue: #1d4ed8;
-            --secondary-blue: #2563eb;
-            --dark-blue: #1e40af;
-            --accent-blue: #3b82f6;
-            --text-main: #f8fafc;
-            --text-muted: #cbd5e1;
-        }
+      :root {
+        --primary-blue: #1d4ed8;
+        --secondary-blue: #2563eb;
+        --dark-blue: #1e40af;
+        --accent-blue: #3b82f6;
+        --text-main: #f8fafc;
+        --text-muted: #cbd5e1;
+      }
 
-        html, body {
-            height: 100%;
-            margin: 0;
-            padding: 0;
-        }
+      html,
+      body {
+        height: 100%;
+        margin: 0;
+        padding: 0;
+      }
 
-        body {
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            background: linear-gradient(135deg, var(--primary-blue), var(--dark-blue));
-            color: #f8fafc;
-            display: flex;
-            flex-direction: column;
-            justify-content: space-between;
-            align-items: center;
-            overflow-x: hidden;
-        }
+      body {
+        font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
+        background: linear-gradient(
+          135deg,
+          var(--primary-blue),
+          var(--dark-blue)
+        );
+        color: #f8fafc;
+        display: flex;
+        flex-direction: column;
+        justify-content: space-between;
+        align-items: center;
+        overflow-x: hidden;
+      }
 
-        /* SATRI Web Theme Navbar */
-        .navbar {
-            width: 100%;
-            background-color: var(--secondary-blue);
-            padding: 0.8rem 2rem;
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.15);
-            z-index: 1000;
-            box-sizing: border-box;
-            flex-shrink: 0;
-        }
+      /* SATRI Web Theme Navbar */
+      .navbar {
+        width: 100%;
+        background-color: var(--secondary-blue);
+        padding: 0.8rem 2rem;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        box-shadow: 0 4px 10px rgba(0, 0, 0, 0.15);
+        z-index: 1000;
+        box-sizing: border-box;
+        flex-shrink: 0;
+      }
 
-        .nav-brand {
-            display: flex;
-            align-items: center;
-            gap: 12px;
-        }
+      .nav-brand {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+      }
 
-        .nav-logo-img {
-            height: 32px;
-            width: auto;
-            display: block;
-        }
+      .nav-logo-img {
+        height: 32px;
+        width: auto;
+        display: block;
+      }
 
-        .nav-logo-text {
-            font-size: 1.5rem;
-            font-weight: bold;
-            color: #ffffff;
-            letter-spacing: 1px;
-            text-transform: uppercase;
-        }
+      .nav-logo-text {
+        font-size: 1.5rem;
+        font-weight: bold;
+        color: #ffffff;
+        letter-spacing: 1px;
+        text-transform: uppercase;
+      }
 
-        /* Main Content Wrapper */
-        .main-content {
-            flex: 1;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            width: 100%;
-            padding: 1.5rem;
-            box-sizing: border-box;
-        }
+      /* Main Content Wrapper */
+      .main-content {
+        flex: 1;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        width: 100%;
+        padding: 1.5rem;
+        box-sizing: border-box;
+      }
 
-        /* Game Card - Made larger and more spacious */
-        .game-container {
-            background-color: #1e293b;
-            color: var(--text-main);
-            padding: 3rem 2.5rem;
-            border-radius: 1.25rem;
-            box-shadow: 0 20px 45px rgba(0, 0, 0, 0.4);
-            text-align: center;
-            width: 460px;
-            max-width: 95%;
-            transition: background-color 0.4s ease;
-            position: relative;
-        }
+      /* Game Card - Made larger and more spacious */
+      .game-container {
+        background-color: #1e293b;
+        color: var(--text-main);
+        padding: 3rem 2.5rem;
+        border-radius: 1.25rem;
+        box-shadow: 0 20px 45px rgba(0, 0, 0, 0.4);
+        text-align: center;
+        width: 460px;
+        max-width: 95%;
+        transition: background-color 0.4s ease;
+        position: relative;
+      }
 
-        h1 {
-            margin-top: 0;
-            font-size: 2.2rem;
-            color: #ffffff;
-            text-shadow: 0 1px 3px rgba(0,0,0,0.3);
-        }
+      h1 {
+        margin-top: 0;
+        font-size: 2.2rem;
+        color: #ffffff;
+        text-shadow: 0 1px 3px rgba(0, 0, 0, 0.3);
+      }
 
-        .screen {
-            display: none;
-        }
+      .screen {
+        display: none;
+      }
 
-        .screen.active {
-            display: block;
-        }
+      .screen.active {
+        display: block;
+      }
 
-        /* Back Button */
-        .btn-back {
-            position: absolute;
-            top: 1rem;
-            left: 1rem;
-            background: rgba(0, 0, 0, 0.2);
-            border: 1px solid rgba(255, 255, 255, 0.4);
-            border-radius: 50%;
-            width: 36px;
-            height: 36px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 1.2rem;
-            cursor: pointer;
-            padding: 0;
-            flex: none;
-        }
+      /* Back Button */
+      .btn-back {
+        position: absolute;
+        top: 1rem;
+        left: 1rem;
+        background: rgba(0, 0, 0, 0.2);
+        border: 1px solid rgba(255, 255, 255, 0.4);
+        border-radius: 50%;
+        width: 36px;
+        height: 36px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 1.2rem;
+        cursor: pointer;
+        padding: 0;
+        flex: none;
+      }
 
-        .btn-back:hover {
-            background: rgba(255, 255, 255, 0.3);
-        }
+      .btn-back:hover {
+        background: rgba(255, 255, 255, 0.3);
+      }
 
-        /* Timer Bar */
-        .timer-bar-container {
-            width: 100%;
-            height: 10px;
-            background-color: rgba(255, 255, 255, 0.3);
-            border-radius: 5px;
-            margin-bottom: 1.8rem;
-            overflow: hidden;
-        }
+      /* Timer Bar */
+      .timer-bar-container {
+        width: 100%;
+        height: 10px;
+        background-color: rgba(255, 255, 255, 0.3);
+        border-radius: 5px;
+        margin-bottom: 1.8rem;
+        overflow: hidden;
+      }
 
-        .timer-bar {
-            width: 100%;
-            height: 100%;
-            background-color: #ffffff;
-            transition: width 0.05s linear;
-        }
+      .timer-bar {
+        width: 100%;
+        height: 100%;
+        background-color: #ffffff;
+        transition: width 0.05s linear;
+      }
 
-        .stats {
-            display: flex;
-            justify-content: space-between;
-            font-size: 1rem;
-            color: #f8fafc;
-            margin-bottom: 1.8rem;
-            font-weight: 600;
-            text-shadow: 0 1px 2px rgba(0,0,0,0.3);
-        }
+      .stats {
+        display: flex;
+        justify-content: space-between;
+        font-size: 1rem;
+        color: #f8fafc;
+        margin-bottom: 1.8rem;
+        font-weight: 600;
+        text-shadow: 0 1px 2px rgba(0, 0, 0, 0.3);
+      }
 
-        /* Word Display */
-        .word-display {
-            font-size: 3.5rem;
-            font-weight: bold;
-            margin: 2rem 0;
-            min-height: 90px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            text-transform: uppercase;
-            letter-spacing: 3px;
-            color: #ffffff;
-            text-shadow: 0 3px 6px rgba(0,0,0,0.5);
-        }
+      /* Word Display */
+      .word-display {
+        font-size: 3.5rem;
+        font-weight: bold;
+        margin: 2rem 0;
+        min-height: 90px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        text-transform: uppercase;
+        letter-spacing: 3px;
+        color: #ffffff;
+        text-shadow: 0 3px 6px rgba(0, 0, 0, 0.5);
+      }
 
-        p.instruction {
-            font-size: 1.1rem;
-            color: #f8fafc;
-            margin-bottom: 1.8rem;
-            text-shadow: 0 1px 2px rgba(0,0,0,0.3);
-        }
+      p.instruction {
+        font-size: 1.1rem;
+        color: #f8fafc;
+        margin-bottom: 1.8rem;
+        text-shadow: 0 1px 2px rgba(0, 0, 0, 0.3);
+      }
 
-        /* Buttons */
-        .btn-group {
-            display: flex;
-            gap: 1.2rem;
-            justify-content: center;
-        }
+      /* Buttons */
+      .btn-group {
+        display: flex;
+        gap: 1.2rem;
+        justify-content: center;
+      }
 
-        button {
-            flex: 1;
-            padding: 1rem 1.4rem;
-            font-size: 1.2rem;
-            font-weight: bold;
-            border: 2px solid rgba(255, 255, 255, 0.8);
-            border-radius: 0.75rem;
-            cursor: pointer;
-            color: #ffffff;
-            background-color: rgba(0, 0, 0, 0.25);
-            backdrop-filter: blur(5px);
-            transition: background-color 0.2s, transform 0.1s;
-            text-shadow: 0 1px 2px rgba(0,0,0,0.5);
-        }
+      button {
+        flex: 1;
+        padding: 1rem 1.4rem;
+        font-size: 1.2rem;
+        font-weight: bold;
+        border: 2px solid rgba(255, 255, 255, 0.8);
+        border-radius: 0.75rem;
+        cursor: pointer;
+        color: #ffffff;
+        background-color: rgba(0, 0, 0, 0.25);
+        backdrop-filter: blur(5px);
+        transition:
+          background-color 0.2s,
+          transform 0.1s;
+        text-shadow: 0 1px 2px rgba(0, 0, 0, 0.5);
+      }
 
-        button:hover {
-            background-color: rgba(255, 255, 255, 0.25);
-        }
+      button:hover {
+        background-color: rgba(255, 255, 255, 0.25);
+      }
 
-        button:active {
-            transform: scale(0.95);
-        }
+      button:active {
+        transform: scale(0.95);
+      }
 
-        .btn-start {
-            background-color: rgba(255, 255, 255, 0.2);
-            color: #ffffff;
-            width: 100%;
-            margin-top: 1.2rem;
-            border-radius: 25px;
-            padding: 0.9rem 1.4rem;
-            border: 2px solid #ffffff;
-        }
+      .btn-start {
+        background-color: rgba(255, 255, 255, 0.2);
+        color: #ffffff;
+        width: 100%;
+        margin-top: 1.2rem;
+        border-radius: 25px;
+        padding: 0.9rem 1.4rem;
+        border: 2px solid #ffffff;
+      }
 
-        .btn-start:hover {
-            background-color: rgba(255, 255, 255, 0.35);
-        }
+      .btn-start:hover {
+        background-color: rgba(255, 255, 255, 0.35);
+      }
 
-        /* Scoreboard */
-        .final-score {
-            font-size: 3rem;
-            font-weight: bold;
-            color: #ffffff;
-            margin: 1.2rem 0;
-            text-shadow: 0 2px 4px rgba(0,0,0,0.3);
-        }
+      /* Scoreboard */
+      .final-score {
+        font-size: 3rem;
+        font-weight: bold;
+        color: #ffffff;
+        margin: 1.2rem 0;
+        text-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
+      }
 
-        /* Footer Styling */
-        footer {
-            width: 100%;
-            text-align: center;
-            padding: 1rem 0;
-            background-color: var(--secondary-blue);
-            flex-shrink: 0;
-        }
+      /* Footer Styling */
+      footer {
+        width: 100%;
+        text-align: center;
+        padding: 1rem 0;
+        background-color: var(--secondary-blue);
+        flex-shrink: 0;
+      }
 
-        footer p {
-            margin: 0;
-            color: #cbd5e1;
-            font-size: 0.9rem;
-        }
+      footer p {
+        margin: 0;
+        color: #cbd5e1;
+        font-size: 0.9rem;
+      }
     </style>
-</head>
-<body>
-
+  </head>
+  <body>
     <!-- SATRI Website Navbar -->
     <nav class="navbar">
-        <div class="nav-brand">
-            <img src="image.png" alt="SATRI Logo" class="nav-logo-img">
-            <span class="nav-logo-text">SATRI</span>
-        </div>
+      <div class="nav-brand">
+        <img src="image.png" alt="SATRI Logo" class="nav-logo-img" />
+        <span class="nav-logo-text">SATRI</span>
+      </div>
     </nav>
 
     <div class="main-content">
-        <div id="game-card" class="game-container">
-            <!-- Start Screen -->
-            <div id="start-screen" class="screen active">
-                <h1>Color Flash</h1>
-                <p>Speed increases and time decreases by <strong>5%</strong> every round!</p>
-                <p style="font-size: 0.95rem; color: #f8fafc;">One mistake or timeout means <strong>Game Over</strong>!</p>
-                <button class="btn-start" onclick="startGame()">Start Game</button>
-            </div>
-
-            <!-- Game Screen -->
-            <div id="game-screen" class="screen">
-                <button class="btn-back" onclick="returnToStart()" title="Back to Start">&larr;</button>
-                <div class="stats">
-                    <span id="round-counter">Round: 1</span>
-                    <span id="score-counter">Score: 0</span>
-                </div>
-                
-                <div class="timer-bar-container">
-                    <div id="timer-bar" class="timer-bar"></div>
-                </div>
-
-                <p class="instruction">Does ink color match the word?</p>
-                
-                <div id="word-display" class="word-display">RED</div>
-
-                <div class="btn-group">
-                    <button class="btn-yes" onclick="checkAnswer(true)">YES</button>
-                    <button class="btn-no" onclick="checkAnswer(false)">NO</button>
-                </div>
-            </div>
-
-            <!-- Game Over Screen -->
-            <div id="gameover-screen" class="screen">
-                <button class="btn-back" onclick="returnToStart()" title="Back to Start">&larr;</button>
-                <h1>Game Over!</h1>
-                <p style="color: #f8fafc;">Your Final Score:</p>
-                <div id="final-score" class="final-score">0</div>
-                <button class="btn-start" onclick="startGame()">Play Again</button>
-            </div>
+      <div id="game-card" class="game-container">
+        <!-- Start Screen -->
+        <div id="start-screen" class="screen active">
+          <h1>Color Flash</h1>
+          <p>
+            Speed increases and time decreases by <strong>5%</strong> every
+            round!
+          </p>
+          <p style="font-size: 0.95rem; color: #f8fafc">
+            One mistake or timeout means <strong>Game Over</strong>!
+          </p>
+          <button class="btn-start" onclick="startGame()">Start Game</button>
         </div>
+
+        <!-- Game Screen -->
+        <div id="game-screen" class="screen">
+          <button
+            class="btn-back"
+            onclick="returnToStart()"
+            title="Back to Start"
+          >
+            &larr;
+          </button>
+          <div class="stats">
+            <span id="round-counter">Round: 1</span>
+            <span id="score-counter">Score: 0</span>
+          </div>
+
+          <div class="timer-bar-container">
+            <div id="timer-bar" class="timer-bar"></div>
+          </div>
+
+          <p class="instruction">Does ink color match the word?</p>
+
+          <div id="word-display" class="word-display">RED</div>
+
+          <div class="btn-group">
+            <button class="btn-yes" onclick="checkAnswer(true)">YES</button>
+            <button class="btn-no" onclick="checkAnswer(false)">NO</button>
+          </div>
+        </div>
+
+        <!-- Game Over Screen -->
+        <div id="gameover-screen" class="screen">
+          <button
+            class="btn-back"
+            onclick="returnToStart()"
+            title="Back to Start"
+          >
+            &larr;
+          </button>
+          <h1>Game Over!</h1>
+          <p style="color: #f8fafc">Your Final Score:</p>
+          <div id="final-score" class="final-score">0</div>
+          <button class="btn-start" onclick="startGame()">Play Again</button>
+        </div>
+      </div>
     </div>
 
     <footer>
-        <p>&copy; 2026 SATRI. All rights reserved.</p>
+      <p>&copy; 2026 SATRI. All rights reserved | Aayush KC</p>
     </footer>
 
     <script>
-        // 7 distinct rainbow-like high-contrast colors chosen to avoid blending issues (e.g. Red and Orange separated)
-        const colors = [
-            { name: "RED", hex: "#dc2626" },       // Bold Crimson Red
-            { name: "YELLOW", hex: "#facc15" },    // Vibrant Yellow
-            { name: "GREEN", hex: "#16a34a" },     // Deep Green
-            { name: "BLUE", hex: "#2563eb" },      // Royal Blue
-            { name: "PURPLE", hex: "#9333ea" },    // Vivid Purple
-            { name: "ORANGE", hex: "#f97316" },    // Distinct Orange
-            { name: "CYAN", hex: "#06b6d4" }       // Bright Cyan / Turquoise
-        ];
+      // 7 distinct rainbow-like high-contrast colors chosen to avoid blending issues (e.g. Red and Orange separated)
+      const colors = [
+        { name: "RED", hex: "#dc2626" }, // Bold Crimson Red
+        { name: "YELLOW", hex: "#facc15" }, // Vibrant Yellow
+        { name: "GREEN", hex: "#16a34a" }, // Deep Green
+        { name: "BLUE", hex: "#2563eb" }, // Royal Blue
+        { name: "PURPLE", hex: "#9333ea" }, // Vivid Purple
+        { name: "ORANGE", hex: "#f97316" }, // Distinct Orange
+        { name: "CYAN", hex: "#06b6d4" }, // Bright Cyan / Turquoise
+      ];
 
-        const INITIAL_TIME = 3000;
+      const INITIAL_TIME = 3000;
 
-        let currentRound = 0;
-        let score = 0;
-        let correctAnswer = false;
-        let timerInterval = null;
-        let roundStartTime = null;
-        let currentRoundTime = INITIAL_TIME;
+      let currentRound = 0;
+      let score = 0;
+      let correctAnswer = false;
+      let timerInterval = null;
+      let roundStartTime = null;
+      let currentRoundTime = INITIAL_TIME;
 
-        const startScreen = document.getElementById('start-screen');
-        const gameScreen = document.getElementById('game-screen');
-        const gameoverScreen = document.getElementById('gameover-screen');
-        const wordDisplay = document.getElementById('word-display');
-        const roundCounter = document.getElementById('round-counter');
-        const scoreCounter = document.getElementById('score-counter');
-        const timerBar = document.getElementById('timer-bar');
-        const finalScoreText = document.getElementById('final-score');
-        const gameCard = document.getElementById('game-card');
+      const startScreen = document.getElementById("start-screen");
+      const gameScreen = document.getElementById("game-screen");
+      const gameoverScreen = document.getElementById("gameover-screen");
+      const wordDisplay = document.getElementById("word-display");
+      const roundCounter = document.getElementById("round-counter");
+      const scoreCounter = document.getElementById("score-counter");
+      const timerBar = document.getElementById("timer-bar");
+      const finalScoreText = document.getElementById("final-score");
+      const gameCard = document.getElementById("game-card");
 
-        function startGame() {
-            currentRound = 0;
-            score = 0;
-            currentRoundTime = INITIAL_TIME;
-            gameCard.style.backgroundColor = '#1e293b'; // Reset card bg to default dark slate on start
-            switchScreen(gameScreen);
-            nextRound();
+      function startGame() {
+        currentRound = 0;
+        score = 0;
+        currentRoundTime = INITIAL_TIME;
+        gameCard.style.backgroundColor = "#1e293b"; // Reset card bg to default dark slate on start
+        switchScreen(gameScreen);
+        nextRound();
+      }
+
+      function returnToStart() {
+        clearInterval(timerInterval);
+        gameCard.style.backgroundColor = "#1e293b";
+        switchScreen(startScreen);
+      }
+
+      function switchScreen(screen) {
+        document
+          .querySelectorAll(".screen")
+          .forEach((s) => s.classList.remove("active"));
+        screen.classList.add("active");
+      }
+
+      function nextRound() {
+        currentRoundTime = INITIAL_TIME * Math.pow(0.95, currentRound);
+
+        currentRound++;
+        roundCounter.innerText = `Round: ${currentRound}`;
+        scoreCounter.innerText = `Score: ${score}`;
+
+        const randomWordObj = colors[Math.floor(Math.random() * colors.length)];
+        const shouldMatch = Math.random() < 0.5;
+        let randomColorObj = randomWordObj;
+
+        if (!shouldMatch) {
+          const filteredColors = colors.filter(
+            (c) => c.name !== randomWordObj.name,
+          );
+          randomColorObj =
+            filteredColors[Math.floor(Math.random() * filteredColors.length)];
         }
 
-        function returnToStart() {
+        correctAnswer = shouldMatch;
+
+        wordDisplay.innerText = randomWordObj.name;
+        wordDisplay.style.color = "#ffffff"; // Keep the word text color white
+
+        // Set the card background to the chosen high-contrast color
+        gameCard.style.backgroundColor = randomColorObj.hex;
+
+        startTimer();
+      }
+
+      function startTimer() {
+        clearInterval(timerInterval);
+        roundStartTime = Date.now();
+
+        timerInterval = setInterval(() => {
+          const elapsed = Date.now() - roundStartTime;
+          const remaining = currentRoundTime - elapsed;
+          const percentage = (remaining / currentRoundTime) * 100;
+
+          if (percentage <= 0) {
             clearInterval(timerInterval);
-            gameCard.style.backgroundColor = '#1e293b';
-            switchScreen(startScreen);
+            endGame(); // Timeout triggers game over instantly
+          } else {
+            timerBar.style.width = `${percentage}%`;
+          }
+        }, 20);
+      }
+
+      function checkAnswer(userAnswer) {
+        clearInterval(timerInterval);
+        if (userAnswer === correctAnswer) {
+          score++;
+          nextRound(); // Correct answer proceeds to the next round infinitely
+        } else {
+          endGame(); // Wrong answer triggers game over instantly
         }
+      }
 
-        function switchScreen(screen) {
-            document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
-            screen.classList.add('active');
-        }
-
-        function nextRound() {
-            currentRoundTime = INITIAL_TIME * Math.pow(0.95, currentRound);
-
-            currentRound++;
-            roundCounter.innerText = `Round: ${currentRound}`;
-            scoreCounter.innerText = `Score: ${score}`;
-
-            const randomWordObj = colors[Math.floor(Math.random() * colors.length)];
-            const shouldMatch = Math.random() < 0.5;
-            let randomColorObj = randomWordObj;
-
-            if (!shouldMatch) {
-                const filteredColors = colors.filter(c => c.name !== randomWordObj.name);
-                randomColorObj = filteredColors[Math.floor(Math.random() * filteredColors.length)];
-            }
-
-            correctAnswer = shouldMatch;
-
-            wordDisplay.innerText = randomWordObj.name;
-            wordDisplay.style.color = '#ffffff'; // Keep the word text color white
-
-            // Set the card background to the chosen high-contrast color
-            gameCard.style.backgroundColor = randomColorObj.hex;
-
-            startTimer();
-        }
-
-        function startTimer() {
-            clearInterval(timerInterval);
-            roundStartTime = Date.now();
-
-            timerInterval = setInterval(() => {
-                const elapsed = Date.now() - roundStartTime;
-                const remaining = currentRoundTime - elapsed;
-                const percentage = (remaining / currentRoundTime) * 100;
-
-                if (percentage <= 0) {
-                    clearInterval(timerInterval);
-                    endGame(); // Timeout triggers game over instantly
-                } else {
-                    timerBar.style.width = `${percentage}%`;
-                }
-            }, 20);
-        }
-
-        function checkAnswer(userAnswer) {
-            clearInterval(timerInterval);
-            if (userAnswer === correctAnswer) {
-                score++;
-                nextRound(); // Correct answer proceeds to the next round infinitely
-            } else {
-                endGame(); // Wrong answer triggers game over instantly
-            }
-        }
-
-        function endGame() {
-            clearInterval(timerInterval);
-            gameCard.style.backgroundColor = '#1e293b'; // Reset card background on game over
-            switchScreen(gameoverScreen);
-            finalScoreText.innerText = `${score}`;
-        }
+      function endGame() {
+        clearInterval(timerInterval);
+        gameCard.style.backgroundColor = "#1e293b"; // Reset card background on game over
+        switchScreen(gameoverScreen);
+        finalScoreText.innerText = `${score}`;
+      }
     </script>
-</body>
+  </body>
 </html>
