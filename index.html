@@ -3,7 +3,7 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Color Flash Challenge | SATRI</title>
+    <title>Arcade Hub | SATRI</title>
     <style>
       :root {
         --primary-blue: #1d4ed8;
@@ -11,7 +11,11 @@
         --dark-blue: #1e40af;
         --accent-blue: #3b82f6;
         --text-main: #f8fafc;
-        --text-muted: #cbd5e1;
+        --text-muted: #64748b;
+      }
+
+      * {
+        box-sizing: border-box;
       }
 
       html,
@@ -34,6 +38,7 @@
         justify-content: space-between;
         align-items: center;
         overflow-x: hidden;
+        min-width: 0;
       }
 
       /* SATRI Web Theme Navbar */
@@ -79,20 +84,67 @@
         width: 100%;
         padding: 1.5rem;
         box-sizing: border-box;
+        min-width: 0;
       }
 
-      /* Game Card - Made larger and more spacious */
+      /* Game Container */
       .game-container {
         background-color: #1e293b;
         color: var(--text-main);
-        padding: 3rem 2.5rem;
+        padding: 2.5rem 2rem;
         border-radius: 1.25rem;
         box-shadow: 0 20px 45px rgba(0, 0, 0, 0.4);
-        text-align: center;
-        width: 460px;
+        width: 750px;
         max-width: 95%;
-        transition: background-color 0.4s ease;
+        transition: background-color 0.4s ease, width 0.3s ease;
         position: relative;
+        display: flex;
+        gap: 1.5rem;
+        min-width: 0;
+      }
+
+      .game-container.wide-mode {
+        width: 1150px;
+        max-width: 96vw;
+      }
+
+      .game-main-panel {
+        flex: 1;
+        display: flex;
+        flex-direction: column;
+        min-width: 0;
+      }
+
+      /* Side Bar Panel */
+      .game-sidebar {
+        width: 130px;
+        background: rgba(15, 23, 42, 0.6);
+        border: 1px solid rgba(255, 255, 255, 0.1);
+        border-radius: 0.75rem;
+        padding: 1rem;
+        display: flex;
+        flex-direction: column;
+        justify-content: space-around;
+        text-align: center;
+        flex-shrink: 0;
+      }
+
+      .sidebar-stat-box {
+        margin-bottom: 0.5rem;
+      }
+
+      .sidebar-title {
+        font-size: 0.75rem;
+        color: var(--text-muted);
+        text-transform: uppercase;
+        letter-spacing: 1px;
+        margin-bottom: 0.2rem;
+      }
+
+      .sidebar-value {
+        font-size: 1.5rem;
+        font-weight: bold;
+        color: #ffffff;
       }
 
       h1 {
@@ -100,14 +152,55 @@
         font-size: 2.2rem;
         color: #ffffff;
         text-shadow: 0 1px 3px rgba(0, 0, 0, 0.3);
+        text-align: center;
       }
 
       .screen {
         display: none;
+        flex-direction: column;
+        width: 100%;
+        min-width: 0;
       }
 
       .screen.active {
-        display: block;
+        display: flex;
+      }
+
+      /* Menu Select Cards */
+      .menu-grid {
+        display: flex;
+        gap: 1.5rem;
+        margin-top: 1.5rem;
+        justify-content: center;
+      }
+
+      .menu-card {
+        flex: 1;
+        background: rgba(15, 23, 42, 0.7);
+        border: 2px solid rgba(255, 255, 255, 0.2);
+        border-radius: 1rem;
+        padding: 1.8rem 1.2rem;
+        text-align: center;
+        cursor: pointer;
+        transition: all 0.2s ease;
+      }
+
+      .menu-card:hover {
+        background: rgba(255, 255, 255, 0.1);
+        border-color: var(--accent-blue);
+        transform: translateY(-4px);
+      }
+
+      .menu-card h3 {
+        margin: 0 0 0.5rem 0;
+        font-size: 1.4rem;
+        color: #ffffff;
+      }
+
+      .menu-card p {
+        margin: 0;
+        font-size: 0.9rem;
+        color: #cbd5e1;
       }
 
       /* Back Button */
@@ -126,45 +219,19 @@
         font-size: 1.2rem;
         cursor: pointer;
         padding: 0;
-        flex: none;
+        color: white;
+        z-index: 10;
       }
 
       .btn-back:hover {
         background: rgba(255, 255, 255, 0.3);
       }
 
-      /* Timer Bar */
-      .timer-bar-container {
-        width: 100%;
-        height: 10px;
-        background-color: rgba(255, 255, 255, 0.3);
-        border-radius: 5px;
-        margin-bottom: 1.8rem;
-        overflow: hidden;
-      }
-
-      .timer-bar {
-        width: 100%;
-        height: 100%;
-        background-color: #ffffff;
-        transition: width 0.05s linear;
-      }
-
-      .stats {
-        display: flex;
-        justify-content: space-between;
-        font-size: 1rem;
-        color: #f8fafc;
-        margin-bottom: 1.8rem;
-        font-weight: 600;
-        text-shadow: 0 1px 2px rgba(0, 0, 0, 0.3);
-      }
-
-      /* Word Display */
-      .word-display {
+      /* Color Flash Specific Styles */
+      .color-word-display {
         font-size: 3.5rem;
         font-weight: bold;
-        margin: 2rem 0;
+        margin: 1.5rem 0;
         min-height: 90px;
         display: flex;
         align-items: center;
@@ -175,22 +242,99 @@
         text-shadow: 0 3px 6px rgba(0, 0, 0, 0.5);
       }
 
-      p.instruction {
-        font-size: 1.1rem;
-        color: #f8fafc;
-        margin-bottom: 1.8rem;
-        text-shadow: 0 1px 2px rgba(0, 0, 0, 0.3);
-      }
-
-      /* Buttons */
-      .btn-group {
+      .color-btn-group {
         display: flex;
         gap: 1.2rem;
         justify-content: center;
       }
 
+      /* Authentic Monkeytype Multi-line Box */
+      .typing-wrapper {
+        position: relative;
+        background: rgba(15, 23, 42, 0.9);
+        border: 2px solid rgba(255, 255, 255, 0.15);
+        border-radius: 0.75rem;
+        padding: 1.5rem;
+        margin: 1.2rem 0;
+        height: 230px;
+        overflow: hidden;
+        min-width: 0;
+        width: 100%;
+      }
+
+      .typing-display {
+        font-size: 2rem;
+        font-family: "Courier New", monospace;
+        letter-spacing: 1px;
+        display: flex;
+        flex-wrap: wrap;
+        align-content: flex-start;
+        gap: 0px 14px;
+        color: var(--text-muted);
+        line-height: 1.35;
+        position: relative;
+        transition: transform 0.15s ease-out;
+        user-select: none;
+        width: 100%;
+        min-width: 0;
+      }
+
+      .word {
+        display: flex;
+        position: relative;
+      }
+
+      .letter {
+        color: var(--text-muted);
+        position: relative;
+      }
+
+      .letter.correct {
+        color: #e2e8f0;
+      }
+
+      .letter.incorrect {
+        color: #ef4444;
+      }
+
+      /* Caret lives directly on the current letter — it can never drift
+         out of sync with the text because it's not separately positioned. */
+      .letter.current::before {
+        content: '';
+        position: absolute;
+        left: -2px;
+        top: 10%;
+        bottom: 10%;
+        width: 2.5px;
+        background-color: var(--accent-blue);
+        border-radius: 1px;
+        animation: flash 1s infinite;
+      }
+
+      @keyframes flash {
+        0%, 100% { opacity: 1; }
+        50% { opacity: 0; }
+      }
+
+      /* Hidden Input */
+      .typing-input {
+        opacity: 0;
+        position: absolute;
+        pointer-events: none;
+        top: 0;
+        left: 0;
+      }
+
+      p.instruction {
+        font-size: 1rem;
+        color: #f8fafc;
+        margin-bottom: 1.2rem;
+        text-align: center;
+        text-shadow: 0 1px 2px rgba(0, 0, 0, 0.3);
+      }
+
+      /* Common Buttons */
       button {
-        flex: 1;
         padding: 1rem 1.4rem;
         font-size: 1.2rem;
         font-weight: bold;
@@ -200,10 +344,9 @@
         color: #ffffff;
         background-color: rgba(0, 0, 0, 0.25);
         backdrop-filter: blur(5px);
-        transition:
-          background-color 0.2s,
-          transform 0.1s;
+        transition: background-color 0.2s, transform 0.1s;
         text-shadow: 0 1px 2px rgba(0, 0, 0, 0.5);
+        flex: 1;
       }
 
       button:hover {
@@ -230,11 +373,20 @@
 
       /* Scoreboard */
       .final-score {
-        font-size: 3rem;
+        font-size: 2.5rem;
         font-weight: bold;
         color: #ffffff;
-        margin: 1.2rem 0;
-        text-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
+        margin: 0.5rem 0;
+        text-align: center;
+      }
+
+      .gameover-stats {
+        display: flex;
+        justify-content: space-around;
+        background: rgba(15, 23, 42, 0.5);
+        border-radius: 0.75rem;
+        padding: 1rem;
+        margin: 1rem 0;
       }
 
       /* Footer Styling */
@@ -264,61 +416,114 @@
 
     <div class="main-content">
       <div id="game-card" class="game-container">
-        <!-- Start Screen -->
-        <div id="start-screen" class="screen active">
-          <h1>Color Flash</h1>
-          <p>
-            Speed increases and time decreases by <strong>5%</strong> every
-            round!
-          </p>
-          <p style="font-size: 0.95rem; color: #f8fafc">
-            One mistake or timeout means <strong>Game Over</strong>!
-          </p>
-          <button class="btn-start" onclick="startGame()">Start Game</button>
+
+        <!-- Selection Hub Menu Screen -->
+        <div id="menu-screen" class="screen active">
+          <h1>SATRI Arcade</h1>
+          <p style="text-align: center; margin-bottom: 0.5rem;">Choose a game mode to play:</p>
+          <div class="menu-grid">
+            <div class="menu-card" onclick="selectGame('typing')">
+              <h3>Speed Typing</h3>
+              <p>Test your WPM & accuracy in 30 seconds (Monkeytype style).</p>
+            </div>
+            <div class="menu-card" onclick="selectGame('color')">
+              <h3>Color Flash</h3>
+              <p>Fast-paced color matching challenge with increasing speed.</p>
+            </div>
+          </div>
         </div>
 
-        <!-- Game Screen -->
-        <div id="game-screen" class="screen">
-          <button
-            class="btn-back"
-            onclick="returnToStart()"
-            title="Back to Start"
-          >
-            &larr;
-          </button>
-          <div class="stats">
-            <span id="round-counter">Round: 1</span>
-            <span id="score-counter">Score: 0</span>
+        <!-- 1. SPEED TYPING GAME SCREENS -->
+        <div id="typing-start-screen" class="screen">
+          <button class="btn-back" onclick="returnToMenu()" title="Back to Menu">&larr;</button>
+          <h1>Speed Typing</h1>
+          <p style="text-align: center">Type words as fast as you can within <strong>30 seconds</strong>!</p>
+          <button class="btn-start" onclick="startTypingGame()">Start Typing</button>
+        </div>
+
+        <div id="typing-screen" class="screen">
+          <button class="btn-back" onclick="returnToMenu()" title="Back to Menu">&larr;</button>
+          <div style="display: flex; gap: 1rem; width: 100%; margin-top: 1.5rem; min-width: 0;">
+            <div class="game-main-panel">
+              <p class="instruction" style="margin-top: 0;">Start typing to begin timer...</p>
+
+              <div class="typing-wrapper" onclick="focusInput()">
+                <div id="typing-display" class="typing-display"></div>
+              </div>
+
+              <input type="text" id="typing-input" class="typing-input" autocomplete="off" autocapitalize="off" spellcheck="false">
+            </div>
+            <div class="game-sidebar">
+              <div class="sidebar-stat-box">
+                <div class="sidebar-title">Time</div>
+                <div id="typing-timer" class="sidebar-value">30</div>
+              </div>
+              <div class="sidebar-stat-box">
+                <div class="sidebar-title">WPM</div>
+                <div id="wpm-display" class="sidebar-value">0</div>
+              </div>
+              <div class="sidebar-stat-box">
+                <div class="sidebar-title">Accuracy</div>
+                <div id="acc-display" class="sidebar-value">100%</div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div id="typing-gameover-screen" class="screen">
+          <button class="btn-back" onclick="returnToMenu()" title="Back to Menu">&larr;</button>
+          <h1>Time's Up!</h1>
+          <div class="gameover-stats">
+            <div>
+              <div class="sidebar-title">Final WPM</div>
+              <div id="final-wpm" class="final-score">0</div>
+            </div>
+            <div>
+              <div class="sidebar-title">Accuracy</div>
+              <div id="final-acc" class="final-score" style="color: #38bdf8;">100%</div>
+            </div>
+          </div>
+          <button class="btn-start" onclick="startTypingGame()" style="margin-top: 0.5rem;">Try Again</button>
+        </div>
+
+
+        <!-- 2. COLOR FLASH GAME SCREENS -->
+        <div id="color-start-screen" class="screen">
+          <button class="btn-back" onclick="returnToMenu()" title="Back to Menu">&larr;</button>
+          <h1>Color Flash</h1>
+          <p style="text-align: center">Speed increases and time decreases by <strong>5%</strong> every round!</p>
+          <p style="font-size: 0.95rem; color: #f8fafc; text-align: center">One mistake or timeout means <strong>Game Over</strong>!</p>
+          <button class="btn-start" onclick="startColorGame()">Start Game</button>
+        </div>
+
+        <div id="color-screen" class="screen">
+          <button class="btn-back" onclick="returnToMenu()" title="Back to Menu">&larr;</button>
+          <div class="game-sidebar" style="width: 100%; flex-direction: row; margin-bottom: 1rem; box-sizing: border-box;">
+            <div class="sidebar-stat-box"><span id="round-counter" style="font-weight: bold; color: #fff;">Round: 1</span></div>
+            <div class="sidebar-stat-box"><span id="score-counter" style="font-weight: bold; color: #fff;">Score: 0</span></div>
           </div>
 
-          <div class="timer-bar-container">
-            <div id="timer-bar" class="timer-bar"></div>
+          <div style="width: 100%; height: 10px; background-color: rgba(255, 255, 255, 0.3); border-radius: 5px; margin-bottom: 1.2rem; overflow: hidden;">
+            <div id="timer-bar" style="width: 100%; height: 100%; background-color: #ffffff; transition: width 0.05s linear;"></div>
           </div>
 
           <p class="instruction">Does ink color match the word?</p>
+          <div id="color-word-display" class="color-word-display">RED</div>
 
-          <div id="word-display" class="word-display">RED</div>
-
-          <div class="btn-group">
-            <button class="btn-yes" onclick="checkAnswer(true)">YES</button>
-            <button class="btn-no" onclick="checkAnswer(false)">NO</button>
+          <div class="color-btn-group">
+            <button onclick="checkColorAnswer(true)">YES</button>
+            <button onclick="checkColorAnswer(false)">NO</button>
           </div>
         </div>
 
-        <!-- Game Over Screen -->
-        <div id="gameover-screen" class="screen">
-          <button
-            class="btn-back"
-            onclick="returnToStart()"
-            title="Back to Start"
-          >
-            &larr;
-          </button>
+        <div id="color-gameover-screen" class="screen">
+          <button class="btn-back" onclick="returnToMenu()" title="Back to Menu">&larr;</button>
           <h1>Game Over!</h1>
-          <p style="color: #f8fafc">Your Final Score:</p>
-          <div id="final-score" class="final-score">0</div>
-          <button class="btn-start" onclick="startGame()">Play Again</button>
+          <p style="color: #f8fafc; text-align: center;">Your Final Score:</p>
+          <div id="color-final-score" class="final-score">0</div>
+          <button class="btn-start" onclick="startColorGame()">Play Again</button>
         </div>
+
       </div>
     </div>
 
@@ -327,121 +532,350 @@
     </footer>
 
     <script>
-      // 7 distinct rainbow-like high-contrast colors chosen to avoid blending issues (e.g. Red and Orange separated)
-      const colors = [
-        { name: "RED", hex: "#dc2626" }, // Bold Crimson Red
-        { name: "YELLOW", hex: "#facc15" }, // Vibrant Yellow
-        { name: "GREEN", hex: "#16a34a" }, // Deep Green
-        { name: "BLUE", hex: "#2563eb" }, // Royal Blue
-        { name: "PURPLE", hex: "#9333ea" }, // Vivid Purple
-        { name: "ORANGE", hex: "#f97316" }, // Distinct Orange
-        { name: "CYAN", hex: "#06b6d4" }, // Bright Cyan / Turquoise
+      const gameCard = document.getElementById("game-card");
+
+      function switchScreen(screenId) {
+        document.querySelectorAll(".screen").forEach((s) => s.classList.remove("active"));
+        document.getElementById(screenId).classList.add("active");
+      }
+
+      function returnToMenu() {
+        clearInterval(typingTimerInterval);
+        clearInterval(colorTimerInterval);
+        gameCard.style.backgroundColor = "#1e293b";
+        gameCard.classList.remove("wide-mode");
+        switchScreen("menu-screen");
+      }
+
+      function selectGame(type) {
+        if (type === 'typing') {
+          switchScreen("typing-start-screen");
+        } else if (type === 'color') {
+          switchScreen("color-start-screen");
+        }
+      }
+
+      /* ==================== MONKEYTYPE-STYLE ENGINE ==================== */
+      /* Caret is CSS-anchored to whichever letter has class "current" —
+         no manual pixel positioning, so it can never visually drift from
+         the text (see .letter.current::before above). */
+      const wordPool = [
+        "code", "fast", "satri", "web", "design", "type", "speed", "test",
+        "keyboard", "challenge", "developer", "browser", "script", "software",
+        "tech", "network", "system", "future", "modern", "interface", "display",
+        "project", "student", "learning", "logic", "function", "element", "style",
+        "render", "object", "array", "string", "query", "server", "client"
       ];
 
-      const INITIAL_TIME = 3000;
+      const GAME_DURATION = 30;
+      let typingTimer = GAME_DURATION;
+      let typingTimerInterval = null;
+      let isTypingPlaying = false;
+      let isTypingFinished = false;
+      let typingWords = [];
+      let currentWordIndex = 0;
+      let currentLetterIndex = 0;
+      let incorrectCharsCount = 0;
+      let correctCharsCount = 0;
 
-      let currentRound = 0;
-      let score = 0;
-      let correctAnswer = false;
-      let timerInterval = null;
-      let roundStartTime = null;
-      let currentRoundTime = INITIAL_TIME;
+      const typingDisplay = document.getElementById("typing-display");
+      const typingInput = document.getElementById("typing-input");
+      const typingTimerDisplay = document.getElementById("typing-timer");
+      const wpmDisplay = document.getElementById("wpm-display");
+      const accDisplay = document.getElementById("acc-display");
+      const finalWpm = document.getElementById("final-wpm");
+      const finalAcc = document.getElementById("final-acc");
 
-      const startScreen = document.getElementById("start-screen");
-      const gameScreen = document.getElementById("game-screen");
-      const gameoverScreen = document.getElementById("gameover-screen");
-      const wordDisplay = document.getElementById("word-display");
+      function startTypingGame() {
+        switchScreen("typing-screen");
+        resetTypingStats();
+        generateTypingWords();
+        renderTypingWords();
+        focusInput();
+        gameCard.classList.add("wide-mode");
+      }
+
+      function resetTypingStats() {
+        clearInterval(typingTimerInterval);
+        typingTimer = GAME_DURATION;
+        isTypingPlaying = false;
+        isTypingFinished = false;
+        currentWordIndex = 0;
+        currentLetterIndex = 0;
+        incorrectCharsCount = 0;
+        correctCharsCount = 0;
+        typingTimerDisplay.innerText = typingTimer;
+        wpmDisplay.innerText = "0";
+        accDisplay.innerText = "100%";
+        typingInput.value = "";
+        typingDisplay.style.transform = `translateY(0px)`;
+      }
+
+      function generateTypingWords() {
+        typingWords = [...wordPool].sort(() => 0.5 - Math.random()).slice(0, 40);
+      }
+
+      function buildWordEl(word, markCurrent) {
+        const wordDiv = document.createElement("div");
+        wordDiv.classList.add("word");
+
+        word.split("").forEach((char, i) => {
+          const letterSpan = document.createElement("span");
+          letterSpan.classList.add("letter");
+          letterSpan.innerText = char;
+          if (markCurrent && i === 0) letterSpan.classList.add("current");
+          wordDiv.appendChild(letterSpan);
+        });
+        return wordDiv;
+      }
+
+      function renderTypingWords() {
+        typingDisplay.innerHTML = "";
+        typingWords.forEach((word, i) => {
+          typingDisplay.appendChild(buildWordEl(word, i === 0));
+        });
+      }
+
+      function focusInput() {
+        typingInput.focus();
+      }
+
+      window.addEventListener("keydown", (e) => {
+        if (!document.getElementById("typing-screen").classList.contains("active")) return;
+        if (isTypingFinished) return;
+
+        if (document.activeElement !== typingInput) {
+          focusInput();
+        }
+
+        if (!isTypingPlaying && e.key.length === 1 && e.key !== " ") {
+          startTypingTimer();
+        }
+
+        const currentWordEl = typingDisplay.children[currentWordIndex];
+        if (!currentWordEl) return;
+        const letters = currentWordEl.children;
+
+        // Backspace — only within the current word, matching the reference
+        if (e.key === "Backspace") {
+          e.preventDefault();
+          if (currentLetterIndex > 0) {
+            if (letters[currentLetterIndex]) {
+              letters[currentLetterIndex].classList.remove("current");
+            }
+            currentLetterIndex--;
+            letters[currentLetterIndex].className = "letter current";
+          }
+          updateLineScroll();
+          return;
+        }
+
+        // Spacebar — submit current word, advance to next
+        if (e.key === " ") {
+          e.preventDefault();
+          if (currentLetterIndex === 0) return;
+
+          if (letters[currentLetterIndex]) {
+            letters[currentLetterIndex].classList.remove("current");
+          }
+
+          currentWordIndex++;
+          currentLetterIndex = 0;
+
+          if (currentWordIndex >= typingWords.length - 8) {
+            appendMoreTypingWords();
+          }
+
+          const nextWordEl = typingDisplay.children[currentWordIndex];
+          if (nextWordEl && nextWordEl.children[0]) {
+            nextWordEl.children[0].classList.add("current");
+          }
+          updateLineScroll();
+          return;
+        }
+
+        // Character keys — extra keystrokes past word length are ignored
+        if (e.key.length === 1 && !e.ctrlKey && !e.metaKey && !e.altKey) {
+          e.preventDefault();
+          if (currentLetterIndex < letters.length) {
+            const targetLetter = letters[currentLetterIndex];
+            targetLetter.classList.remove("current");
+
+            if (e.key === targetLetter.textContent) {
+              targetLetter.classList.add("correct");
+              correctCharsCount++;
+            } else {
+              targetLetter.classList.add("incorrect");
+              incorrectCharsCount++;
+            }
+
+            currentLetterIndex++;
+            if (currentLetterIndex < letters.length) {
+              letters[currentLetterIndex].classList.add("current");
+            }
+            updateLineScroll();
+          }
+        }
+      });
+
+      function getRenderedLineHeight() {
+        const wordElements = typingDisplay.children;
+        if (wordElements.length < 2) return 34;
+        const firstTop = wordElements[0].offsetTop;
+        for (let i = 1; i < wordElements.length; i++) {
+          if (wordElements[i].offsetTop > firstTop) {
+            return wordElements[i].offsetTop - firstTop;
+          }
+        }
+        return 34;
+      }
+
+      function updateLineScroll() {
+        const currentWordEl = typingDisplay.children[currentWordIndex];
+        if (!currentWordEl) return;
+        const lineTop = currentWordEl.offsetTop;
+        const lineHeight = getRenderedLineHeight();
+
+        if (lineTop > lineHeight) {
+          typingDisplay.style.transform = `translateY(-${lineTop - 8}px)`;
+        } else {
+          typingDisplay.style.transform = `translateY(0px)`;
+        }
+      }
+
+      function appendMoreTypingWords() {
+        const extraWords = [...wordPool].sort(() => 0.5 - Math.random()).slice(0, 15);
+        extraWords.forEach((word) => {
+          typingWords.push(word);
+          typingDisplay.appendChild(buildWordEl(word, false));
+        });
+      }
+
+      function startTypingTimer() {
+        isTypingPlaying = true;
+        typingTimerInterval = setInterval(() => {
+          typingTimer--;
+          typingTimerDisplay.innerText = typingTimer;
+          calculateTypingStats();
+
+          if (typingTimer <= 0) {
+            clearInterval(typingTimerInterval);
+            endTypingGame();
+          }
+        }, 1000);
+      }
+
+      function calculateTypingStats() {
+        const timeElapsedMin = (GAME_DURATION - typingTimer) / 60;
+        let wpm = timeElapsedMin > 0 ? Math.round((correctCharsCount / 5) / timeElapsedMin) : 0;
+
+        let totalStrokes = correctCharsCount + incorrectCharsCount;
+        let accuracy = totalStrokes > 0 ? Math.max(0, Math.round((correctCharsCount / totalStrokes) * 100)) : 100;
+
+        wpmDisplay.innerText = wpm;
+        accDisplay.innerText = `${accuracy}%`;
+      }
+
+      function endTypingGame() {
+        isTypingPlaying = false;
+        isTypingFinished = true;
+        calculateTypingStats();
+        finalWpm.innerText = wpmDisplay.innerText;
+        finalAcc.innerText = accDisplay.innerText;
+        switchScreen("typing-gameover-screen");
+      }
+
+
+      /* ==================== COLOR FLASH GAME LOGIC ==================== */
+      const colors = [
+        { name: "RED", hex: "#dc2626" },
+        { name: "YELLOW", hex: "#facc15" },
+        { name: "GREEN", hex: "#16a34a" },
+        { name: "BLUE", hex: "#2563eb" },
+        { name: "PURPLE", hex: "#9333ea" },
+        { name: "ORANGE", hex: "#f97316" },
+        { name: "CYAN", hex: "#06b6d4" },
+      ];
+
+      const INITIAL_COLOR_TIME = 3000;
+      let currentColorRound = 0;
+      let colorScore = 0;
+      let colorCorrectAnswer = false;
+      let colorTimerInterval = null;
+      let colorRoundStartTime = null;
+      let currentColorRoundTime = INITIAL_COLOR_TIME;
+
+      const colorWordDisplay = document.getElementById("color-word-display");
       const roundCounter = document.getElementById("round-counter");
       const scoreCounter = document.getElementById("score-counter");
       const timerBar = document.getElementById("timer-bar");
-      const finalScoreText = document.getElementById("final-score");
-      const gameCard = document.getElementById("game-card");
+      const colorFinalScoreText = document.getElementById("color-final-score");
 
-      function startGame() {
-        currentRound = 0;
-        score = 0;
-        currentRoundTime = INITIAL_TIME;
-        gameCard.style.backgroundColor = "#1e293b"; // Reset card bg to default dark slate on start
-        switchScreen(gameScreen);
-        nextRound();
-      }
-
-      function returnToStart() {
-        clearInterval(timerInterval);
+      function startColorGame() {
+        currentColorRound = 0;
+        colorScore = 0;
+        currentColorRoundTime = INITIAL_COLOR_TIME;
         gameCard.style.backgroundColor = "#1e293b";
-        switchScreen(startScreen);
+        switchScreen("color-screen");
+        nextColorRound();
       }
 
-      function switchScreen(screen) {
-        document
-          .querySelectorAll(".screen")
-          .forEach((s) => s.classList.remove("active"));
-        screen.classList.add("active");
-      }
-
-      function nextRound() {
-        currentRoundTime = INITIAL_TIME * Math.pow(0.95, currentRound);
-
-        currentRound++;
-        roundCounter.innerText = `Round: ${currentRound}`;
-        scoreCounter.innerText = `Score: ${score}`;
+      function nextColorRound() {
+        currentColorRoundTime = INITIAL_COLOR_TIME * Math.pow(0.95, currentColorRound);
+        currentColorRound++;
+        roundCounter.innerText = `Round: ${currentColorRound}`;
+        scoreCounter.innerText = `Score: ${colorScore}`;
 
         const randomWordObj = colors[Math.floor(Math.random() * colors.length)];
         const shouldMatch = Math.random() < 0.5;
         let randomColorObj = randomWordObj;
 
         if (!shouldMatch) {
-          const filteredColors = colors.filter(
-            (c) => c.name !== randomWordObj.name,
-          );
-          randomColorObj =
-            filteredColors[Math.floor(Math.random() * filteredColors.length)];
+          const filteredColors = colors.filter((c) => c.name !== randomWordObj.name);
+          randomColorObj = filteredColors[Math.floor(Math.random() * filteredColors.length)];
         }
 
-        correctAnswer = shouldMatch;
-
-        wordDisplay.innerText = randomWordObj.name;
-        wordDisplay.style.color = "#ffffff"; // Keep the word text color white
-
-        // Set the card background to the chosen high-contrast color
+        colorCorrectAnswer = shouldMatch;
+        colorWordDisplay.innerText = randomWordObj.name;
+        colorWordDisplay.style.color = "#ffffff";
         gameCard.style.backgroundColor = randomColorObj.hex;
 
-        startTimer();
+        startColorTimer();
       }
 
-      function startTimer() {
-        clearInterval(timerInterval);
-        roundStartTime = Date.now();
+      function startColorTimer() {
+        clearInterval(colorTimerInterval);
+        colorRoundStartTime = Date.now();
 
-        timerInterval = setInterval(() => {
-          const elapsed = Date.now() - roundStartTime;
-          const remaining = currentRoundTime - elapsed;
-          const percentage = (remaining / currentRoundTime) * 100;
+        colorTimerInterval = setInterval(() => {
+          const elapsed = Date.now() - colorRoundStartTime;
+          const remaining = currentColorRoundTime - elapsed;
+          const percentage = (remaining / currentColorRoundTime) * 100;
 
           if (percentage <= 0) {
-            clearInterval(timerInterval);
-            endGame(); // Timeout triggers game over instantly
+            clearInterval(colorTimerInterval);
+            endColorGame();
           } else {
             timerBar.style.width = `${percentage}%`;
           }
         }, 20);
       }
 
-      function checkAnswer(userAnswer) {
-        clearInterval(timerInterval);
-        if (userAnswer === correctAnswer) {
-          score++;
-          nextRound(); // Correct answer proceeds to the next round infinitely
+      function checkColorAnswer(userAnswer) {
+        clearInterval(colorTimerInterval);
+        if (userAnswer === colorCorrectAnswer) {
+          colorScore++;
+          nextColorRound();
         } else {
-          endGame(); // Wrong answer triggers game over instantly
+          endColorGame();
         }
       }
 
-      function endGame() {
-        clearInterval(timerInterval);
-        gameCard.style.backgroundColor = "#1e293b"; // Reset card background on game over
-        switchScreen(gameoverScreen);
-        finalScoreText.innerText = `${score}`;
+      function endColorGame() {
+        clearInterval(colorTimerInterval);
+        gameCard.style.backgroundColor = "#1e293b";
+        switchScreen("color-gameover-screen");
+        colorFinalScoreText.innerText = `${colorScore}`;
       }
     </script>
   </body>
