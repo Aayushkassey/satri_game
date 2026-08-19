@@ -1573,6 +1573,75 @@
     max-width: 100%;
   }
 }
+
+/* =========================================================
+   FLASH RECALL (KBC-style memory flash quiz)
+   ========================================================= */
+
+.flash-display-box {
+  min-height: 140px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin: 1.2rem 0;
+  border-radius: 0.85rem;
+  background: rgba(15, 23, 42, 0.55);
+  border: 2px solid rgba(255, 255, 255, 0.15);
+}
+
+.flash-item-text {
+  font-size: 3rem;
+  font-weight: bold;
+  letter-spacing: 3px;
+  color: #ffffff;
+  text-shadow: 0 3px 6px rgba(0, 0, 0, 0.5);
+  text-align: center;
+  overflow-wrap: anywhere;
+  word-break: break-word;
+  padding: 0 0.5rem;
+}
+
+.flash-item-text.hidden-item {
+  color: transparent;
+  font-size: 1.4rem;
+  letter-spacing: normal;
+}
+
+.flash-item-placeholder {
+  font-size: 1.3rem;
+  font-weight: bold;
+  color: var(--text-muted);
+  text-align: center;
+  letter-spacing: 1px;
+}
+
+.kbc-option-btn {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.6rem;
+}
+
+.kbc-option-label {
+  font-weight: bold;
+  color: #38bdf8;
+  flex-shrink: 0;
+}
+
+@media (max-width: 768px) {
+  .flash-display-box {
+    min-height: 100px;
+    margin: 1rem 0;
+  }
+
+  .flash-item-text {
+    font-size: 2.1rem;
+    letter-spacing: 1.5px;
+  }
+
+  .flash-item-placeholder {
+    font-size: 1.05rem;
+  }
+}
 </style>
   </head>
   <body>
@@ -1622,6 +1691,10 @@
             <div class="menu-card" onclick="selectGame('git')">
               <h3>Git Master</h3>
               <p>Learn Git & GitHub commands.</p>
+            </div>
+            <div class="menu-card" onclick="selectGame('flashrecall')">
+              <h3>Flash Recall</h3>
+              <p>See it for 0.2s, then pick it-Test your memory!</p>
             </div>
           </div>
         </div>
@@ -1850,6 +1923,33 @@
           <button class="btn-start" onclick="startGitGame()">Play Again</button>
         </div>
 
+        <!-- 8. FLASH RECALL GAME SCREENS -->
+        <div id="flashrecall-start-screen" class="screen">
+          <h1>Flash Recall</h1>
+          <p style="text-align: center">A word or number flashes on screen for just <strong>0.2 seconds</strong>. Remember it, then pick the right answer from 4 options — KBC style!</p>
+          <p style="font-size: 0.95rem; color: #f8fafc; text-align: center">One wrong pick or a timeout ends the game!</p>
+          <button class="btn-start" onclick="startFlashRecallGame()">Start Flash Recall</button>
+        </div>
+
+        <div id="flashrecall-screen" class="screen">
+          <div class="game-sidebar" style="width: 100%; flex-direction: row; margin-bottom: 0.5rem;">
+            <div class="sidebar-stat-box"><span id="flash-score" style="font-weight: bold; color: #fff;">Score: 0</span></div>
+            <div class="sidebar-stat-box"><span id="flash-timer" style="font-weight: bold; color: #38bdf8;">Time: --</span></div>
+          </div>
+          <p id="flash-status-text" class="instruction">Get ready...</p>
+          <div class="flash-display-box">
+            <div id="flash-item-text" class="flash-item-text"></div>
+          </div>
+          <div id="flash-options-container" class="sql-options-grid"></div>
+        </div>
+
+        <div id="flashrecall-gameover-screen" class="screen">
+          <h1>Game Over!</h1>
+          <p style="text-align: center; color: #f8fafc;">Final Score:</p>
+          <div id="flash-final-score" class="final-score">0</div>
+          <button class="btn-start" onclick="startFlashRecallGame()">Play Again</button>
+        </div>
+
       </div>
     </div>
 
@@ -1896,6 +1996,8 @@
         clearInterval(bugTimerInterval);
         clearInterval(sqlTimerInterval);
         clearInterval(gitTimerInterval);
+        clearInterval(flashTimerInterval);
+        clearTimeout(flashRevealTimeout);
         selectedBugField = null;
         gameCard.style.backgroundColor = "#1e293b";
         gameCard.classList.remove("wide-mode");
@@ -1910,6 +2012,7 @@
         else if (type === 'bughunter') { renderBugFieldMenu(); switchScreen("bugfield-select-screen"); }
         else if (type === 'sqlmaster') switchScreen("sqlmaster-start-screen");
         else if (type === 'git') switchScreen("git-start-screen");
+        else if (type === 'flashrecall') switchScreen("flashrecall-start-screen");
       }
 
       /* Generic helper: pick a random item from a pool, avoiding an immediate repeat of `last` */
@@ -1923,13 +2026,49 @@
         return choice;
       }
 
+      /* ==================== NO-REPEAT SHUFFLE QUEUES ====================
+         Instead of picking randomly each round (which can repeat questions
+         within the same play session), every question/word/query pool now
+         draws from a shuffled queue that is fully consumed before it is
+         reshuffled — so nothing repeats until every item in that pool has
+         been shown once. */
+      function shuffleArray(arr) {
+        return [...arr].sort(() => 0.5 - Math.random());
+      }
+
+      function drawFromQueue(store, key, pool, lastItem) {
+        if (!store[key] || store[key].length === 0) {
+          let fresh = shuffleArray(pool);
+          if (fresh.length > 1 && fresh[0] === lastItem) {
+            const tmp = fresh[0];
+            fresh[0] = fresh[1];
+            fresh[1] = tmp;
+          }
+          store[key] = fresh;
+        }
+        return store[key].shift();
+      }
+
+      function resetQueue(store, key, pool) {
+        store[key] = shuffleArray(pool);
+      }
+
+      const sqlQueueStore = {};
+      const gitQueueStore = {};
+      const scrambleQueueStore = {};
+      const bugQueueStore = {};
+
       /* ==================== MONKEYTYPE-STYLE ENGINE ==================== */
       const wordPool = [
         "code", "fast", "satri", "web", "design", "type", "speed", "test",
         "keyboard", "challenge", "developer", "browser", "script", "software",
         "tech", "network", "system", "future", "modern", "interface", "display",
         "project", "student", "learning", "logic", "function", "element", "style",
-        "render", "object", "array", "string", "query", "server", "client"
+        "render", "object", "array", "string", "query", "server", "client",
+        "database", "backend", "frontend", "cloud", "python", "variable",
+        "compiler", "syntax", "debug", "commit", "branch", "pixel", "layout",
+        "cache", "token", "module", "class", "loop", "input", "output",
+        "algorithm", "index", "search", "sort", "binary", "vector", "domain"
       ];
 
       const GAME_DURATION = 30;
@@ -2129,6 +2268,11 @@
 
       /* ==================== ANSWER FEEDBACK HELPERS ==================== */
       const ANSWER_FEEDBACK_DELAY = 1200;
+      const CORRECT_FEEDBACK_DELAY = 550;
+      /* Color Flash is a fast reflex game — a full 550ms pause after every
+         correct tap broke the "smooth" feel it used to have. Keep the green
+         flash, but make the pause much shorter for this game only. */
+      const COLOR_CORRECT_DELAY = 120;
       const answerFeedbackTimers = new Set();
 
       function clearAnswerFeedbackTimers() {
@@ -2141,6 +2285,31 @@
           answerFeedbackTimers.delete(timer);
           callback();
         }, ANSWER_FEEDBACK_DELAY);
+        answerFeedbackTimers.add(timer);
+        return timer;
+      }
+
+      /* Very short delay used ONLY for Color Flash's correct taps, so the
+         green flash is visible for an instant without breaking the fast,
+         smooth reflex pacing the game had originally. */
+      function scheduleAfterColorCorrect(callback) {
+        const timer = setTimeout(() => {
+          answerFeedbackTimers.delete(timer);
+          callback();
+        }, COLOR_CORRECT_DELAY);
+        answerFeedbackTimers.add(timer);
+        return timer;
+      }
+
+      /* Shorter delay used after a CORRECT answer so the green flash is
+         visible before the next question loads. Tracked in the same
+         timer set so returnToMenu()/clearAnswerFeedbackTimers() can
+         cancel it if the player navigates away mid-flash. */
+      function scheduleAfterCorrect(callback) {
+        const timer = setTimeout(() => {
+          answerFeedbackTimers.delete(timer);
+          callback();
+        }, CORRECT_FEEDBACK_DELAY);
         answerFeedbackTimers.add(timer);
         return timer;
       }
@@ -2237,11 +2406,27 @@
           const percentage = (remaining / currentColorRoundTime) * 100;
           if (percentage <= 0) {
             clearInterval(colorTimerInterval);
-            endColorGame();
+            handleColorTimeout();
           } else {
             timerBar.style.width = `${percentage}%`;
           }
         }, 20);
+      }
+
+      /* Ran out of time without an answer — reveal the correct answer in
+         green (same visual language as a wrong tap) before ending. */
+      function handleColorTimeout() {
+        const buttons = document.querySelectorAll("#color-screen .color-btn-group button");
+        const correctButton = colorCorrectAnswer ? buttons[0] : buttons[1];
+        if (correctButton) correctButton.classList.add("answer-correct");
+        disableButtons(document.querySelector("#color-screen .color-btn-group"));
+        showAnswerFeedback(
+          document.querySelector("#color-screen .color-btn-group").parentElement,
+          `Time's up! Correct answer: ${colorCorrectAnswer ? "YES" : "NO"}`,
+          "wrong",
+          "color-answer-feedback"
+        );
+        scheduleAfterFeedback(() => endColorGame());
       }
 
       function checkColorAnswer(userAnswer) {
@@ -2252,8 +2437,9 @@
 
         if (userAnswer === colorCorrectAnswer) {
           if (selectedButton) selectedButton.classList.add("answer-correct");
+          disableButtons(document.querySelector("#color-screen .color-btn-group"));
           colorScore++;
-          nextColorRound();
+          scheduleAfterColorCorrect(() => nextColorRound());
         } else {
           if (selectedButton) selectedButton.classList.add("answer-wrong");
           if (correctButton) correctButton.classList.add("answer-correct");
@@ -2322,6 +2508,7 @@
         }, 600);
       }
 
+      /* Used ONLY while the game is replaying the sequence for the player to watch (blue). */
       function flashTile(index) {
         const tile = memoryTiles[index];
         tile.classList.add("active-flash");
@@ -2330,9 +2517,20 @@
         }, 300);
       }
 
+      /* Used ONLY when the player taps a tile that matches the sequence so far (green).
+         Kept as a separate class/function from flashTile() on purpose — mixing the two
+         caused the "was that the sequence flash or my correct click?" confusion. */
+      function flashCorrectTile(index) {
+        const tile = memoryTiles[index];
+        tile.classList.remove("active-flash");
+        tile.classList.add("answer-correct");
+        setTimeout(() => {
+          tile.classList.remove("answer-correct");
+        }, 350);
+      }
+
       function handleTileClick(index) {
         if (!isMemoryPlayerTurn) return;
-        flashTile(index);
         playerSequence.push(index);
         const currentIndex = playerSequence.length - 1;
 
@@ -2354,13 +2552,16 @@
           return;
         }
 
+        /* Correct tap so far — green flash, distinct from the blue sequence playback. */
+        flashCorrectTile(index);
+
         if (playerSequence.length === memorySequence.length) {
           isMemoryPlayerTurn = false;
           memoryLevel++;
           memoryStatusText.innerText = "Correct!";
           setTimeout(() => {
             nextMemoryRound();
-          }, 1000);
+          }, 500);
         }
       }
 
@@ -2388,11 +2589,12 @@
         clearAnswerFeedbackTimers();
         scrambleScore = 0;
         lastScrambleWord = null;
+        resetQueue(scrambleQueueStore, "main", wordPool);
         document.querySelectorAll("#scramble-screen .answer-feedback, #scramble-screen .scramble-correct-word").forEach((el) => el.remove());
         scrambleInput.disabled = false;
         scrambleInput.style.borderColor = "rgba(255, 255, 255, 0.3)";
         const submitButton = document.querySelector("#scramble-screen button[type=submit]");
-        if (submitButton) submitButton.classList.remove("answer-disabled");
+        if (submitButton) submitButton.classList.remove("answer-disabled", "answer-correct", "answer-wrong");
         switchScreen("scramble-screen");
         nextScrambleRound();
       }
@@ -2402,13 +2604,13 @@
         scrambleInput.disabled = false;
         scrambleInput.style.borderColor = "rgba(255, 255, 255, 0.3)";
         const submitButton = document.querySelector("#scramble-screen button[type=submit]");
-        if (submitButton) submitButton.classList.remove("answer-disabled");
+        if (submitButton) submitButton.classList.remove("answer-disabled", "answer-correct", "answer-wrong");
         scrambleInput.value = "";
         scrambleTimer = 20;
         scrambleScoreText.innerText = `Score: ${scrambleScore}`;
         scrambleTimerText.innerText = `Time: ${scrambleTimer}s`;
 
-        scrambleCurrentWord = pickDifferent(wordPool, lastScrambleWord);
+        scrambleCurrentWord = drawFromQueue(scrambleQueueStore, "main", wordPool, lastScrambleWord);
         lastScrambleWord = scrambleCurrentWord;
         let scrambled = scrambleCurrentWord.split("").sort(() => 0.5 - Math.random()).join("");
         
@@ -2428,9 +2630,26 @@
           scrambleTimerText.innerText = `Time: ${scrambleTimer}s`;
           if (scrambleTimer <= 0) {
             clearInterval(scrambleTimerInterval);
-            endScrambleGame();
+            handleScrambleTimeout();
           }
         }, 1000);
+      }
+
+      /* Ran out of time without submitting — reveal the correct word in
+         green before ending, instead of cutting straight to game over. */
+      function handleScrambleTimeout() {
+        scrambleInput.disabled = true;
+        scrambleInput.style.borderColor = "#4ade80";
+        const submitButton = document.querySelector("#scramble-screen button[type=submit]");
+        if (submitButton) {
+          submitButton.classList.add("answer-disabled");
+          submitButton.classList.add("answer-correct");
+        }
+        const feedback = document.createElement("div");
+        feedback.className = "scramble-correct-word";
+        feedback.innerText = `Time's up! Correct answer: ${scrambleCurrentWord.toUpperCase()}`;
+        scrambleInput.parentElement.parentElement.appendChild(feedback);
+        scheduleAfterFeedback(() => endScrambleGame());
       }
 
       function submitScrambleWord(e) {
@@ -2439,7 +2658,18 @@
         if (scrambleInput.value.trim().toLowerCase() === scrambleCurrentWord.toLowerCase()) {
           scrambleScore++;
           clearInterval(scrambleTimerInterval);
-          nextScrambleRound();
+          scrambleInput.disabled = true;
+          scrambleInput.style.borderColor = "#4ade80";
+          const submitButton = document.querySelector("#scramble-screen button[type=submit]");
+          if (submitButton) {
+            submitButton.classList.add("answer-disabled");
+            submitButton.classList.add("answer-correct");
+          }
+          const feedback = document.createElement("div");
+          feedback.className = "scramble-correct-word";
+          feedback.innerText = "Correct!";
+          scrambleInput.parentElement.parentElement.appendChild(feedback);
+          scheduleAfterCorrect(() => nextScrambleRound());
         } else {
           clearInterval(scrambleTimerInterval);
           scrambleInput.style.borderColor = "#ef4444";
@@ -2549,6 +2779,30 @@
             lines: ["async function loadData() {", "  const data = fetch('/api/data').then(res => res.json());", "  console.log(data);", "}"],
             bugIndex: 1,
             explanation: "Missing 'await' before the fetch chain — 'data' logs as a pending Promise, not the actual JSON."
+          },
+          {
+            difficulty: "easy",
+            lines: ["const nav = document.querySelector('.nav')", "nav.classList.add('active');"],
+            bugIndex: 0,
+            explanation: "Missing semicolon after the querySelector line."
+          },
+          {
+            difficulty: "medium",
+            lines: ["let total = 0;", "const prices = [10, 20, 30];", "for (let i = 0; i <= prices.length; i++) {", "  total += prices[i];", "}"],
+            bugIndex: 2,
+            explanation: "Using <= instead of < causes an out-of-bounds read (undefined) on the last loop iteration."
+          },
+          {
+            difficulty: "medium",
+            lines: ["function isEven(num) {", "  if (num % 2 = 0) {", "    return true;", "  }", "  return false;", "}"],
+            bugIndex: 1,
+            explanation: "Using = instead of === for comparison — this is an assignment, not a check."
+          },
+          {
+            difficulty: "hard",
+            lines: ["const users = [{id:1},{id:2}];", "const found = users.find(u => u.id = 2);", "console.log(found);"],
+            bugIndex: 1,
+            explanation: "u.id = 2 assigns 2 to id instead of comparing — should be u.id === 2."
           }
         ],
         mern: [
@@ -2581,6 +2835,24 @@
             lines: ["const app = express();", "app.post('/api/data', (req, res) => {", "  res.json({ ok: true });", "});", "app.use(cors());"],
             bugIndex: 4,
             explanation: "cors() is applied after the route is defined, so it won't protect that route — middleware must come before the routes it should apply to."
+          },
+          {
+            difficulty: "easy",
+            lines: ["const express = require('express')", "const app = express();", "app.listen(5000);"],
+            bugIndex: 0,
+            explanation: "Missing semicolon after the require statement."
+          },
+          {
+            difficulty: "medium",
+            lines: ["router.delete('/api/items/:id', (req, res) => {", "  Item.findByIdAndDelete(req.body.id);", "  res.send('deleted');", "});"],
+            bugIndex: 1,
+            explanation: "The id comes from the route params (req.params.id), not req.body.id."
+          },
+          {
+            difficulty: "hard",
+            lines: ["const orderSchema = new mongoose.Schema({", "  total: Number,", "  items: [itemSchema]", "});", "const Order = mongoose.Model('Order', orderSchema);"],
+            bugIndex: 4,
+            explanation: "Should be mongoose.model() (lowercase 'm') — mongoose.Model is not the factory function used to register a model."
           }
         ],
         react: [
@@ -2613,6 +2885,24 @@
             lines: ["function Timer() {", "  const [seconds, setSeconds] = useState(0);", "  useEffect(() => {", "    const id = setInterval(() => {", "      setSeconds(seconds + 1);", "    }, 1000);", "    return () => clearInterval(id);", "  }, []);", "  return <div>{seconds}</div>;", "}"],
             bugIndex: 4,
             explanation: "Stale closure: 'seconds' stays 0 forever since the effect only runs once — use the functional update setSeconds(s => s + 1)."
+          },
+          {
+            difficulty: "easy",
+            lines: ["const [visible, setVisible] = useState(false)", "return <div>{visible && <Modal />}</div>;"],
+            bugIndex: 0,
+            explanation: "Missing semicolon after the useState declaration."
+          },
+          {
+            difficulty: "medium",
+            lines: ["function UserCard(props) {", "  return <div>{this.props.name}</div>;", "}"],
+            bugIndex: 1,
+            explanation: "Functional components don't have 'this' — should just be {props.name}."
+          },
+          {
+            difficulty: "hard",
+            lines: ["const MemoList = React.memo(function List({ items }) {", "  return items.map(i => <div>{i}</div>);", "});"],
+            bugIndex: 1,
+            explanation: "Rendering a list without a 'key' prop on each element — React needs a unique key per mapped item."
           }
         ],
         nextjs: [
@@ -2633,6 +2923,18 @@
             lines: ["export async function getServerSideProps() {", "  const res = fetch('https://api.example.com/data');", "  const data = res.json();", "  return { props: { data } };", "}"],
             bugIndex: 1,
             explanation: "Missing 'await' before fetch() — 'res' is a pending Promise, so res.json() fails."
+          },
+          {
+            difficulty: "easy",
+            lines: ["import Image from 'next/image';", "export default function Logo() {", "  return <Image src='/logo.png' width={100} height={100} />", "}"],
+            bugIndex: 3,
+            explanation: "Missing semicolon after the return statement."
+          },
+          {
+            difficulty: "medium",
+            lines: ["export default function Page({ params }) {", "  return <h1>Post: {params.slug}</h1>;", "}", "export function generateStaticParams() {", "  return fetch('/api/posts');", "}"],
+            bugIndex: 4,
+            explanation: "generateStaticParams must return an array of param objects, not a raw fetch Promise/Response."
           }
         ],
         laravel: [
@@ -2653,6 +2955,18 @@
             lines: ["public function search(Request $request) {", "    $query = $request->input('q');", "    $results = Product::where('name', 'LIKE' \"%$query%\")->get();", "    return view('search', compact('results'));", "}"],
             bugIndex: 2,
             explanation: "Missing comma between 'LIKE' and the search pattern — breaks the where() call syntax."
+          },
+          {
+            difficulty: "easy",
+            lines: ["class Post extends Model {", "    protected $fillable = ['title', 'body']", "}"],
+            bugIndex: 1,
+            explanation: "Missing semicolon after the $fillable array assignment."
+          },
+          {
+            difficulty: "medium",
+            lines: ["Route::get('/posts/{id}', [PostController::class, 'show']);", "Route::get('/posts/create', [PostController::class, 'create']);"],
+            bugIndex: 0,
+            explanation: "The dynamic '/posts/{id}' route is defined before '/posts/create', so 'create' gets swallowed as an id — specific routes must come before wildcard ones."
           }
         ],
         django: [
@@ -2673,6 +2987,18 @@
             lines: ["class Order(models.Model):", "    items = models.ManyToManyField(Item)", "    total = models.DecimalField(max_digits=8, decimal_places=2)", "", "def order_view(request, id):", "    order = Order.objects.get(id=id)", "    order.delete", "    return redirect('orders')"],
             bugIndex: 6,
             explanation: "order.delete is missing parentheses — without them, it's just a method reference and never actually deletes the order."
+          },
+          {
+            difficulty: "easy",
+            lines: ["urlpatterns = [", "    path('posts/', views.post_list, name='post_list')", "]"],
+            bugIndex: 1,
+            explanation: "Missing comma after the path() call — breaks the urlpatterns list syntax."
+          },
+          {
+            difficulty: "medium",
+            lines: ["def register(request):", "    form = RegisterForm(request.POST)", "    if form.is_valid:", "        form.save()"],
+            bugIndex: 2,
+            explanation: "is_valid is a method and needs parentheses — 'if form.is_valid:' is always truthy since it references the method object, not its result."
           }
         ],
         wordpress: [
@@ -2693,6 +3019,18 @@
             lines: ["function get_recent_posts() {", "    $args = array('post_type' => 'post' 'posts_per_page' => 5);", "    $query = new WP_Query($args);", "    while ($query->have_posts()) {", "        the_post();", "        the_title();", "    }", "}"],
             bugIndex: 1,
             explanation: "Missing comma between array items — 'post_type' => 'post' and 'posts_per_page' => 5 need a comma separating them."
+          },
+          {
+            difficulty: "easy",
+            lines: ["function my_theme_setup() {", "    add_theme_support('post-thumbnails')", "}", "add_action('after_setup_theme', 'my_theme_setup');"],
+            bugIndex: 1,
+            explanation: "Missing semicolon after add_theme_support('post-thumbnails')."
+          },
+          {
+            difficulty: "medium",
+            lines: ["<?php if (have_posts()) : ?>", "  <?php while (have_posts()) : the_post(); ?>", "    <h2><?php the_title(); ?></h2>", "<?php endwhile; ?>"],
+            bugIndex: 3,
+            explanation: "Missing the closing 'endif;' for the outer 'if (have_posts())' check."
           }
         ],
         flutter: [
@@ -2713,6 +3051,18 @@
             lines: ["Future<void> fetchData() async {", "  final response = http.get(Uri.parse('https://api.example.com/data'));", "  print(response.body);", "}"],
             bugIndex: 1,
             explanation: "Missing 'await' before http.get() — 'response' is a Future, so .body doesn't exist yet on it directly."
+          },
+          {
+            difficulty: "easy",
+            lines: ["Widget build(BuildContext context) {", "  return Text('Hello')", "}"],
+            bugIndex: 1,
+            explanation: "Missing semicolon after the return statement."
+          },
+          {
+            difficulty: "medium",
+            lines: ["ListView.builder(", "  itemCount: items.length,", "  itemBuilder: (context, index) {", "    return Text(items[index + 1]);", "  },", ")"],
+            bugIndex: 3,
+            explanation: "index + 1 goes out of bounds on the last item — should just use items[index]."
           }
         ],
         crossplatform: [
@@ -2733,6 +3083,18 @@
             lines: ["<TouchableOpacity onPress={handlePress()}>", "  <Text>Press Me</Text>", "</TouchableOpacity>"],
             bugIndex: 0,
             explanation: "onPress={handlePress()} invokes the function immediately during render — should be onPress={handlePress} to pass a reference."
+          },
+          {
+            difficulty: "easy",
+            lines: ["const styles = StyleSheet.create({", "  container: {", "    flex: 1", "  }", "})"],
+            bugIndex: 4,
+            explanation: "Missing semicolon after the StyleSheet.create() call."
+          },
+          {
+            difficulty: "medium",
+            lines: ["import AsyncStorage from '@react-native-async-storage/async-storage';", "function saveName(name) {", "  AsyncStorage.setItem('name', name);", "}"],
+            bugIndex: 2,
+            explanation: "AsyncStorage.setItem requires a string value — passing a raw variable that might not be a string (or skipping JSON.stringify for objects) silently fails; also missing 'await'/error handling for the async call."
           }
         ],
         uiux: [
@@ -2765,6 +3127,18 @@
             lines: ["<input type=\"text\" placeholder=\"Full Name\" required>", "<input type=\"password\" placeholder=\"Password\" required>", "<button type=\"submit\">Sign Up</button>"],
             bugIndex: 0,
             explanation: "Using placeholder text as the only label — it disappears once the user starts typing, hurting usability and accessibility."
+          },
+          {
+            difficulty: "easy",
+            lines: ["<a href=\"#\" onclick=\"deleteAccount()\">Delete my account</a>"],
+            bugIndex: 0,
+            explanation: "A destructive action is a plain link with no confirmation step — this invites accidental, irreversible clicks."
+          },
+          {
+            difficulty: "medium",
+            lines: ["Step 1: Show a loading spinner instantly on every button click", "Step 2: Never dismiss the spinner if the request fails", "Step 3: Log errors to the console only"],
+            bugIndex: 1,
+            explanation: "A spinner that never dismisses on failure leaves the user stuck with no feedback — errors must be surfaced to the user, not just the console."
           }
         ],
         graphics: [
@@ -2785,6 +3159,18 @@
             lines: ["Step 1: Set the brand's primary and secondary color palette", "Step 2: Use 6 different fonts to make the poster stand out", "Step 3: Maintain consistent spacing using a grid system"],
             bugIndex: 1,
             explanation: "Using too many fonts (6) breaks visual consistency — professional designs typically stick to 2-3 complementary fonts."
+          },
+          {
+            difficulty: "easy",
+            lines: ["Step 1: Save the final logo only as a JPEG file", "Step 2: Deliver the JPEG to the client", "Step 3: Archive the project"],
+            bugIndex: 0,
+            explanation: "Logos need a transparent, scalable format (PNG/SVG/vector), not a JPEG — JPEGs have a solid background and lose quality when resized."
+          },
+          {
+            difficulty: "medium",
+            lines: ["Step 1: Pick a bright neon color for all body text", "Step 2: Use a bold heading font for headings", "Step 3: Keep consistent line spacing throughout"],
+            bugIndex: 0,
+            explanation: "Bright neon body text hurts readability over long passages — neon works better sparingly as an accent, not for large text blocks."
           }
         ],
         productdesign: [
@@ -2805,6 +3191,18 @@
             lines: ["Step 1: Define the primary user persona and their goals", "Step 2: Design the onboarding flow with 12 sequential steps", "Step 3: A/B test the final design"],
             bugIndex: 1,
             explanation: "A 12-step onboarding flow is far too long — long onboarding causes major user drop-off; it should be as short as possible."
+          },
+          {
+            difficulty: "easy",
+            lines: ["Step 1: Sketch multiple low-fidelity concepts", "Step 2: Pick the first idea without comparing alternatives", "Step 3: Move straight to development"],
+            bugIndex: 1,
+            explanation: "Committing to the first idea without comparing alternatives skips the exploration that usually finds a better solution."
+          },
+          {
+            difficulty: "hard",
+            lines: ["Step 1: Design an error state for the payment form", "Step 2: Show a generic 'Something went wrong' message for every failure", "Step 3: Ship without user testing the error flow"],
+            bugIndex: 1,
+            explanation: "A generic error message for every failure gives users no idea how to fix the actual problem (e.g. wrong card number vs. network issue)."
           }
         ],
         python: [
@@ -2825,6 +3223,24 @@
             lines: ["def add_item(item, cart=[]):", "    cart.append(item)", "    return cart"],
             bugIndex: 0,
             explanation: "Using a mutable default argument (list) — it persists across function calls, a classic Python bug."
+          },
+          {
+            difficulty: "easy",
+            lines: ["age = 20", "print('Age: ' + age)"],
+            bugIndex: 1,
+            explanation: "Can't concatenate a string with an int directly — needs str(age), or an f-string, to avoid a TypeError."
+          },
+          {
+            difficulty: "medium",
+            lines: ["def divide(a, b):", "    return a / b", "result = divide(10, 0)", "print(result)"],
+            bugIndex: 2,
+            explanation: "Dividing by zero raises a ZeroDivisionError at runtime — the call on line 3 triggers the crash."
+          },
+          {
+            difficulty: "hard",
+            lines: ["class Counter:", "    count = 0", "    def increment(self):", "        Counter.count + 1"],
+            bugIndex: 3,
+            explanation: "The expression Counter.count + 1 computes a value but never assigns it back — should be Counter.count += 1."
           }
         ],
         data: [
@@ -2857,6 +3273,18 @@
             lines: ["sales_by_region = df.groupby('region')['sales'].mean()", "top_region = sales_by_region.sort_values().index[0]", "print(f\"Top region: {top_region}\")"],
             bugIndex: 1,
             explanation: "sort_values() sorts ascending by default, so index[0] gives the LOWEST sales region — needs ascending=False."
+          },
+          {
+            difficulty: "easy",
+            lines: ["import pandas as pd", "df = pd.DataFrame(data)", "print(df.shape())"],
+            bugIndex: 2,
+            explanation: "df.shape is a property, not a method — calling it with () raises a TypeError; should be df.shape."
+          },
+          {
+            difficulty: "medium",
+            lines: ["SELECT product_name, price", "FROM products", "ORDER BY price DESC", "LIMIT 5,", "OFFSET 0;"],
+            bugIndex: 3,
+            explanation: "Trailing comma after LIMIT 5 breaks the query — OFFSET should directly follow without a comma (LIMIT 5 OFFSET 0)."
           }
         ],
         iot: [
@@ -2877,6 +3305,18 @@
             lines: ["void setup() {", "  Serial.begin(9600);", "  pinMode(TRIG_PIN, OUTPUT);", "  pinMode(ECHO_PIN, OUTPUT);", "}"],
             bugIndex: 3,
             explanation: "ECHO_PIN should be set to INPUT, not OUTPUT — it's used to read the returning ultrasonic signal."
+          },
+          {
+            difficulty: "easy",
+            lines: ["void loop() {", "  digitalWrite(LED_PIN, HIGH)", "  delay(1000);", "}"],
+            bugIndex: 1,
+            explanation: "Missing semicolon after digitalWrite(LED_PIN, HIGH)."
+          },
+          {
+            difficulty: "medium",
+            lines: ["int temp = analogRead(A0);", "float voltage = temp * 5 / 1023;", "Serial.println(voltage);"],
+            bugIndex: 1,
+            explanation: "Integer division happens before the float assignment (temp * 5 / 1023 uses int math), truncating the result — needs 5.0 to force floating-point division."
           }
         ],
         smartiot: [
@@ -2897,6 +3337,18 @@
             lines: ["void publishData(float temp) {", "  char msg[50];", "  sprintf(msg, 'Temp: %f', temp);", "  client.publish('sensors/temp', msg);", "}"],
             bugIndex: 2,
             explanation: "String literals in C/Arduino need double quotes, not single quotes — 'Temp: %f' should be \"Temp: %f\"."
+          },
+          {
+            difficulty: "easy",
+            lines: ["void setup() {", "  Serial.begin(9600)", "  pinMode(RELAY_PIN, OUTPUT);", "}"],
+            bugIndex: 1,
+            explanation: "Missing semicolon after Serial.begin(9600)."
+          },
+          {
+            difficulty: "medium",
+            lines: ["void loop() {", "  client.loop();", "  if (millis() - lastMsg > 2000) {", "    lastMsg = millis()", "    publishData(readTemp());", "  }", "}"],
+            bugIndex: 3,
+            explanation: "Missing semicolon after lastMsg = millis() — breaks compilation."
           }
         ],
         cybersecurity: [
@@ -2917,6 +3369,24 @@
             lines: ["app.get('/user/:id', (req, res) => {", "  const user = db.getUser(req.params.id);", "  res.json(user);", "});"],
             bugIndex: 0,
             explanation: "No authentication or authorization check before returning user data — this is an Insecure Direct Object Reference (IDOR) vulnerability."
+          },
+          {
+            difficulty: "easy",
+            lines: ["<input type=\"text\" name=\"comment\">", "<?php echo $_POST['comment']; ?>"],
+            bugIndex: 1,
+            explanation: "Echoing raw user input directly into HTML without escaping (htmlspecialchars) opens the door to Cross-Site Scripting (XSS)."
+          },
+          {
+            difficulty: "medium",
+            lines: ["const jwt = require('jsonwebtoken');", "const token = jwt.sign({ id: user.id }, 'mysecret123');"],
+            bugIndex: 1,
+            explanation: "Hardcoding a weak, guessable JWT secret directly in code — secrets should be strong, random, and loaded from environment variables."
+          },
+          {
+            difficulty: "hard",
+            lines: ["app.use(express.json());", "app.post('/reset-password', (req, res) => {", "  db.query(`UPDATE users SET password='${req.body.password}' WHERE email='${req.body.email}'`);", "  res.send('Password reset');", "});"],
+            bugIndex: 2,
+            explanation: "Building the SQL string with template literals from raw request body is a classic SQL injection vulnerability — use parameterized queries."
           }
         ],
         qa: [
@@ -2937,6 +3407,18 @@
             lines: ["Test Case: Verify checkout button", "Step 1: Add item to cart", "Step 2: Click checkout button", "Expected Result: (not specified)"],
             bugIndex: 3,
             explanation: "The expected result is missing — a valid test case must define what 'pass' looks like, or it can't be verified."
+          },
+          {
+            difficulty: "easy",
+            lines: ["def test_signup():", "    response = signup('test@mail.com', 'pass123')", "    assert response.status_code = 201"],
+            bugIndex: 2,
+            explanation: "Using = instead of == inside the assert statement — a syntax error in Python."
+          },
+          {
+            difficulty: "hard",
+            lines: ["Test Plan: Only test the 'happy path' where the user enters valid data", "Skip boundary values and invalid inputs to save time", "Mark the feature as fully tested once the happy path passes"],
+            bugIndex: 2,
+            explanation: "Calling a feature 'fully tested' after only the happy path is misleading — boundary and negative cases are needed for real coverage."
           }
         ],
         devops: [
@@ -2957,6 +3439,18 @@
             lines: ["version: '3'", "services:", "  web:", "    build: .", "    ports:", "      - '5000-5000'", "  redis:", "    image: 'redis:alpine'"],
             bugIndex: 5,
             explanation: "Docker Compose port mapping should use a colon, not a hyphen — '5000-5000' should be '5000:5000' (host:container)."
+          },
+          {
+            difficulty: "easy",
+            lines: ["FROM python:3.11", "COPY requirements.txt .", "RUN pip install requirements.txt"],
+            bugIndex: 2,
+            explanation: "Missing the -r flag — should be 'pip install -r requirements.txt' to install from the file, not treat it as a package name."
+          },
+          {
+            difficulty: "hard",
+            lines: ["jobs:", "  deploy:", "    needs: build", "    runs-on: ubuntu-latest", "    steps:", "      - run: echo ${{ secrets.API_KEY }}"],
+            bugIndex: 5,
+            explanation: "Echoing a secret directly to logs exposes it in plaintext in the CI output — secrets should never be printed."
           }
         ],
         digitalmarketing: [
@@ -2977,6 +3471,18 @@
             lines: ["Step 1: Send a marketing email to all users, including those who unsubscribed", "Step 2: Segment the remaining list by interest", "Step 3: A/B test subject lines"],
             bugIndex: 0,
             explanation: "Emailing unsubscribed users violates anti-spam laws (like GDPR/CAN-SPAM) and damages sender reputation."
+          },
+          {
+            difficulty: "easy",
+            lines: ["Step 1: Write an ad headline promising 'guaranteed #1 ranking in 24 hours'", "Step 2: Launch the campaign", "Step 3: Track click-through rate"],
+            bugIndex: 0,
+            explanation: "Making an unrealistic, unverifiable guarantee like this risks platform ad-policy violations and erodes trust."
+          },
+          {
+            difficulty: "medium",
+            lines: ["Step 1: Build a landing page for the campaign", "Step 2: Drive all ad traffic straight to the homepage instead", "Step 3: Measure conversion rate"],
+            bugIndex: 1,
+            explanation: "Sending targeted ad traffic to the generic homepage instead of the matching landing page usually tanks conversion rate."
           }
         ],
         socialmedia: [
@@ -2997,6 +3503,18 @@
             lines: ["Step 1: Schedule posts using a content calendar", "Step 2: Ignore negative comments completely", "Step 3: Post consistently 3-4 times a week"],
             bugIndex: 1,
             explanation: "Ignoring negative comments hurts brand trust — they should be addressed professionally, not ignored."
+          },
+          {
+            difficulty: "easy",
+            lines: ["Step 1: Post a video with no captions or subtitles", "Step 2: Upload it to every platform", "Step 3: Wait for engagement"],
+            bugIndex: 0,
+            explanation: "Most social video is watched with sound off — no captions means a large share of viewers miss the message entirely."
+          },
+          {
+            difficulty: "hard",
+            lines: ["Step 1: Run a giveaway requiring users to tag 20 friends to enter", "Step 2: Announce the winner", "Step 3: Measure follower growth"],
+            bugIndex: 0,
+            explanation: "Tag-20-friends giveaways violate most platforms' promotion guidelines and tend to attract low-quality, disengaged followers."
           }
         ],
         contentmarketing: [
@@ -3017,6 +3535,18 @@
             lines: ["Step 1: Build brand voice guidelines", "Step 2: Copy a competitor's article and change a few words", "Step 3: Distribute via email and social media"],
             bugIndex: 1,
             explanation: "Copying a competitor's article (even lightly edited) is plagiarism and can cause legal and SEO penalties."
+          },
+          {
+            difficulty: "easy",
+            lines: ["Step 1: Write a blog post with no meta description", "Step 2: Publish immediately", "Step 3: Share on social media"],
+            bugIndex: 0,
+            explanation: "Skipping the meta description hurts click-through rate from search results, where it's often shown as the snippet."
+          },
+          {
+            difficulty: "medium",
+            lines: ["Step 1: Set up a content calendar", "Step 2: Write every post in the same generic tone with no brand voice", "Step 3: Publish consistently"],
+            bugIndex: 1,
+            explanation: "A generic, voiceless tone makes content forgettable — consistent brand voice is what makes content recognizable and memorable."
           }
         ],
         projectbased: [
@@ -3037,6 +3567,18 @@
             lines: ["function mergeConfig(base, override) {", "  return Object.assign(base, override);", "}"],
             bugIndex: 1,
             explanation: "Object.assign(base, override) mutates 'base' directly — should use Object.assign({}, base, override) to avoid side effects."
+          },
+          {
+            difficulty: "easy",
+            lines: ["const btn = document.getElementById('save-btn')", "btn.addEventListener('click', saveData);"],
+            bugIndex: 0,
+            explanation: "Missing semicolon after the getElementById line."
+          },
+          {
+            difficulty: "hard",
+            lines: ["function fetchAndRender() {", "  fetch('/api/items')", "    .then(res => res.json)", "    .then(data => render(data));", "}"],
+            bugIndex: 2,
+            explanation: "res.json is a method and must be called — should be res.json() to actually parse the response body."
           }
         ],
         internship: [
@@ -3057,6 +3599,18 @@
             lines: ["async function submitReport(data) {", "  try {", "    await api.post('/reports', data);", "  } catch (err) {", "  }", "}"],
             bugIndex: 3,
             explanation: "The catch block silently swallows errors — failures go unnoticed since nothing is logged or handled."
+          },
+          {
+            difficulty: "easy",
+            lines: ["const total = items.reduce((sum, item) => {", "  sum + item.price", "}, 0);"],
+            bugIndex: 1,
+            explanation: "Missing 'return' inside the reduce callback — the accumulator never updates, so 'sum + item.price' is computed and discarded."
+          },
+          {
+            difficulty: "medium",
+            lines: ["function formatDate(date) {", "  return date.getMonth() + '/' + date.getDate() + '/' + date.getYear();", "}"],
+            bugIndex: 1,
+            explanation: "getYear() is deprecated and returns a weird offset (e.g. 124 for 2024) — should use getFullYear()."
           }
         ],
         genai: [
@@ -3077,6 +3631,24 @@
             lines: ["for doc in documents:", "    embedding = model.encode(doc)", "    embeddings.append(embedding)", "embeddings = np.array(embedding)"],
             bugIndex: 3,
             explanation: "Uses the last loop variable 'embedding' (singular) instead of the accumulated list 'embeddings' — this only captures the final document's vector."
+          },
+          {
+            difficulty: "easy",
+            lines: ["prompt = \"Summarize this: \" + user_text", "response = model.generate(propmt)"],
+            bugIndex: 1,
+            explanation: "Typo: 'propmt' should be 'prompt' — this raises a NameError."
+          },
+          {
+            difficulty: "medium",
+            lines: ["import numpy as np", "def cosine_similarity(a, b):", "    return np.dot(a, b) / (np.norm(a) * np.norm(b))"],
+            bugIndex: 2,
+            explanation: "np.norm doesn't exist — the correct function is np.linalg.norm(a)."
+          },
+          {
+            difficulty: "hard",
+            lines: ["chat_history = []", "def chat(msg):", "    chat_history = chat_history + [msg]", "    return model.generate(chat_history)"],
+            bugIndex: 2,
+            explanation: "Reassigning the local name 'chat_history' inside the function before it's read raises an UnboundLocalError — it needs a 'global' declaration or should be mutated with append()."
           }
         ]
       };
@@ -3113,6 +3685,8 @@
         if (!selectedBugField) selectedBugField = "fullstack";
         bugScore = 0;
         lastBugChallenge = null;
+        const startPool = bugFieldChallenges[selectedBugField] || bugFieldChallenges.fullstack;
+        resetQueue(bugQueueStore, selectedBugField, startPool);
         document.querySelectorAll("#bughunter-screen .answer-feedback").forEach((el) => el.remove());
         switchScreen("bughunter-screen");
         nextBugRound();
@@ -3125,7 +3699,7 @@
         bugTimerText.innerText = `Time: ${bugTimer}s`;
 
         const pool = bugFieldChallenges[selectedBugField] || bugFieldChallenges.fullstack;
-        currentBugObj = pickDifferent(pool, lastBugChallenge);
+        currentBugObj = drawFromQueue(bugQueueStore, selectedBugField, pool, lastBugChallenge);
         lastBugChallenge = currentBugObj;
         bugObjectiveText.innerText = `${bugFieldLabels[selectedBugField]} — Difficulty: ${currentBugObj.difficulty.toUpperCase()}`;
 
@@ -3148,9 +3722,24 @@
           bugTimerText.innerText = `Time: ${bugTimer}s`;
           if (bugTimer <= 0) {
             clearInterval(bugTimerInterval);
-            endBugHunterGame();
+            handleBugTimeout();
           }
         }, 1000);
+      }
+
+      /* Ran out of time without clicking a line — reveal the buggy line in
+         green before ending, instead of cutting straight to game over. */
+      function handleBugTimeout() {
+        const lines = bugCodeBox.querySelectorAll(".bug-line");
+        if (lines[currentBugObj.bugIndex]) lines[currentBugObj.bugIndex].classList.add("answer-correct");
+        lines.forEach((line) => line.classList.add("answer-disabled"));
+        showAnswerFeedback(
+          bugCodeBox.parentElement,
+          `Time's up! Correct line: ${currentBugObj.bugIndex + 1}`,
+          "wrong",
+          "bug-answer-feedback"
+        );
+        scheduleAfterFeedback(() => endBugHunterGame());
       }
 
       function checkBugLine(idx) {
@@ -3158,8 +3747,9 @@
         const lines = bugCodeBox.querySelectorAll(".bug-line");
         if (idx === currentBugObj.bugIndex) {
           if (lines[idx]) lines[idx].classList.add("answer-correct");
+          lines.forEach((line) => line.classList.add("answer-disabled"));
           bugScore++;
-          nextBugRound();
+          scheduleAfterCorrect(() => nextBugRound());
         } else {
           if (lines[idx]) lines[idx].classList.add("answer-wrong");
           if (lines[currentBugObj.bugIndex]) lines[currentBugObj.bugIndex].classList.add("answer-correct");
@@ -3222,6 +3812,166 @@
             "SELECT UNIQUE department FROM employees;"
           ],
           correctIndex: 2
+        },
+        {
+          objective: "Insert a new user named 'Sita' with email 'sita@mail.com' into the 'users' table.",
+          options: [
+            "INSERT INTO users (name, email) VALUES ('Sita', 'sita@mail.com');",
+            "INSERT users (name, email) SET ('Sita', 'sita@mail.com');",
+            "UPDATE users SET name='Sita', email='sita@mail.com';",
+            "ADD INTO users VALUES ('Sita', 'sita@mail.com');"
+          ],
+          correctIndex: 0
+        },
+        {
+          objective: "Update the price of the product with id 12 to 499 in the 'products' table.",
+          options: [
+            "UPDATE products SET price = 499 WHERE id = 12;",
+            "UPDATE products SET price = 499;",
+            "SET products.price = 499 WHERE id = 12;",
+            "UPDATE price = 499 IN products WHERE id = 12;"
+          ],
+          correctIndex: 0
+        },
+        {
+          objective: "Delete all orders that were cancelled from the 'orders' table.",
+          options: [
+            "DELETE * FROM orders WHERE status = 'cancelled';",
+            "DELETE FROM orders WHERE status = 'cancelled';",
+            "REMOVE FROM orders WHERE status = 'cancelled';",
+            "DROP FROM orders WHERE status = 'cancelled';"
+          ],
+          correctIndex: 1
+        },
+        {
+          objective: "Get each customer's name along with their order total using an INNER JOIN of 'customers' and 'orders'.",
+          options: [
+            "SELECT customers.name, orders.total FROM customers INNER JOIN orders ON customers.id = orders.customer_id;",
+            "SELECT customers.name, orders.total FROM customers, orders;",
+            "SELECT name, total JOIN customers WITH orders;",
+            "SELECT customers.name, orders.total FROM customers LINK orders ON id;"
+          ],
+          correctIndex: 0
+        },
+        {
+          objective: "Find the total sales amount per region from the 'sales' table.",
+          options: [
+            "SELECT region, TOTAL(amount) FROM sales GROUP region;",
+            "SELECT region, SUM(amount) FROM sales GROUP BY region;",
+            "SELECT SUM(amount), region FROM sales ORDER BY region;",
+            "SELECT region, amount FROM sales SUM BY region;"
+          ],
+          correctIndex: 1
+        },
+        {
+          objective: "Show only departments that have more than 5 employees.",
+          options: [
+            "SELECT department, COUNT(*) FROM employees WHERE COUNT(*) > 5 GROUP BY department;",
+            "SELECT department FROM employees GROUP BY department HAVING COUNT(*) > 5;",
+            "SELECT department FROM employees WHERE department > 5;",
+            "SELECT department, COUNT(*) FROM employees ORDER BY COUNT(*) > 5;"
+          ],
+          correctIndex: 1
+        },
+        {
+          objective: "Find products with no category assigned (category is NULL).",
+          options: [
+            "SELECT * FROM products WHERE category = NULL;",
+            "SELECT * FROM products WHERE category == NULL;",
+            "SELECT * FROM products WHERE category IS NULL;",
+            "SELECT * FROM products WHERE category EMPTY;"
+          ],
+          correctIndex: 2
+        },
+        {
+          objective: "Get the top 5 highest-paid employees from the 'employees' table.",
+          options: [
+            "SELECT * FROM employees ORDER BY salary DESC LIMIT 5;",
+            "SELECT TOP 5 * FROM employees ORDER salary;",
+            "SELECT * FROM employees LIMIT 5 ORDER BY salary;",
+            "SELECT * FROM employees WHERE salary TOP 5;"
+          ],
+          correctIndex: 0
+        },
+        {
+          objective: "Rename the 'users' table column 'uname' to 'username'.",
+          options: [
+            "ALTER TABLE users RENAME COLUMN uname TO username;",
+            "UPDATE users RENAME uname TO username;",
+            "ALTER users SET COLUMN uname = username;",
+            "RENAME TABLE users COLUMN uname TO username;"
+          ],
+          correctIndex: 0
+        },
+        {
+          objective: "Add a new column 'age' (integer) to the 'students' table.",
+          options: [
+            "ALTER TABLE students ADD COLUMN age INT;",
+            "UPDATE students ADD age INT;",
+            "INSERT COLUMN age INT INTO students;",
+            "ALTER students ADD age INT;"
+          ],
+          correctIndex: 0
+        },
+        {
+          objective: "Find customers who placed an order in the last 30 days (MySQL syntax).",
+          options: [
+            "SELECT * FROM orders WHERE order_date > NOW() - 30;",
+            "SELECT * FROM orders WHERE order_date >= DATE_SUB(NOW(), INTERVAL 30 DAY);",
+            "SELECT * FROM orders WHERE order_date - 30 = NOW();",
+            "SELECT * FROM orders WHERE order_date < 30 DAYS;"
+          ],
+          correctIndex: 1
+        },
+        {
+          objective: "Combine the results of two SELECT queries into one result set, removing duplicates.",
+          options: [
+            "SELECT name FROM table1 JOIN SELECT name FROM table2;",
+            "SELECT name FROM table1 UNION SELECT name FROM table2;",
+            "SELECT name FROM table1 MERGE table2;",
+            "SELECT name FROM table1 + table2;"
+          ],
+          correctIndex: 1
+        },
+        {
+          objective: "Create a new table 'reviews' with columns id (int, primary key) and comment (text).",
+          options: [
+            "CREATE TABLE reviews (id INT PRIMARY KEY, comment TEXT);",
+            "NEW TABLE reviews (id INT KEY, comment TEXT);",
+            "CREATE reviews TABLE (id INT PRIMARY, comment TEXT);",
+            "TABLE CREATE reviews (id INT PRIMARY KEY, comment TEXT);"
+          ],
+          correctIndex: 0
+        },
+        {
+          objective: "Get the average order value, rounded to 2 decimal places.",
+          options: [
+            "SELECT ROUND(AVG(total), 2) FROM orders;",
+            "SELECT AVG(ROUND(total, 2)) FROM orders;",
+            "SELECT ROUND(AVG(total)), 2 FROM orders;",
+            "SELECT AVG(total, 2) FROM orders;"
+          ],
+          correctIndex: 0
+        },
+        {
+          objective: "Give each row a rank based on salary, highest first, without skipping ranks for ties (window function).",
+          options: [
+            "SELECT name, salary, DENSE_RANK() OVER (ORDER BY salary DESC) FROM employees;",
+            "SELECT name, salary, RANKING(salary DESC) FROM employees;",
+            "SELECT name, salary FROM employees ORDER BY RANK();",
+            "SELECT name, salary, ROW_NUMBER() FROM employees WHERE RANK = salary;"
+          ],
+          correctIndex: 0
+        },
+        {
+          objective: "Select users whose name starts with the letter 'A'.",
+          options: [
+            "SELECT * FROM users WHERE name LIKE 'A%';",
+            "SELECT * FROM users WHERE name STARTS 'A';",
+            "SELECT * FROM users WHERE name = 'A*';",
+            "SELECT * FROM users WHERE name LIKE '%A';"
+          ],
+          correctIndex: 0
         }
       ];
 
@@ -3241,6 +3991,7 @@
         clearAnswerFeedbackTimers();
         sqlScore = 0;
         lastSqlChallenge = null;
+        resetQueue(sqlQueueStore, "main", sqlChallenges);
         document.querySelectorAll("#sqlmaster-screen .answer-feedback").forEach((el) => el.remove());
         switchScreen("sqlmaster-screen");
         nextSqlRound();
@@ -3252,7 +4003,7 @@
         sqlScoreText.innerText = `Score: ${sqlScore}`;
         sqlTimerText.innerText = `Time: ${sqlTimer}s`;
 
-        currentSqlObj = pickDifferent(sqlChallenges, lastSqlChallenge);
+        currentSqlObj = drawFromQueue(sqlQueueStore, "main", sqlChallenges, lastSqlChallenge);
         lastSqlChallenge = currentSqlObj;
         sqlObjectiveText.innerText = `Objective: ${currentSqlObj.objective}`;
 
@@ -3279,9 +4030,25 @@
           sqlTimerText.innerText = `Time: ${sqlTimer}s`;
           if (sqlTimer <= 0) {
             clearInterval(sqlTimerInterval);
-            endSqlGame();
+            handleSqlTimeout();
           }
         }, 1000);
+      }
+
+      /* Ran out of time without picking — reveal the correct query in
+         green before ending, instead of cutting straight to game over. */
+      function handleSqlTimeout() {
+        const buttons = sqlOptionsContainer.querySelectorAll("button");
+        const correctButton = Array.from(buttons).find((button) => button.dataset.optionIndex === String(currentSqlObj.correctIndex));
+        if (correctButton) correctButton.classList.add("answer-correct");
+        disableButtons(sqlOptionsContainer);
+        showAnswerFeedback(
+          sqlOptionsContainer.parentElement,
+          `Time's up! Correct answer: ${currentSqlObj.options[currentSqlObj.correctIndex]}`,
+          "wrong",
+          "sql-answer-feedback"
+        );
+        scheduleAfterFeedback(() => endSqlGame());
       }
 
       function checkSqlAnswer(selectedIdx, correctIdx) {
@@ -3292,8 +4059,9 @@
 
         if (selectedIdx === correctIdx) {
           if (selectedButton) selectedButton.classList.add("answer-correct");
+          disableButtons(sqlOptionsContainer);
           sqlScore++;
-          nextSqlRound();
+          scheduleAfterCorrect(() => nextSqlRound());
         } else {
           if (selectedButton) selectedButton.classList.add("answer-wrong");
           if (correctButton) correctButton.classList.add("answer-correct");
@@ -3416,6 +4184,46 @@
           objective: "On GitHub, what do you open to propose merging your branch into another?",
           options: ["Pull Request", "Merge Ticket", "Push Request", "Branch Proposal"],
           correctIndex: 0
+        },
+        {
+          objective: "Check which files are staged, unstaged, or untracked in the working directory.",
+          options: ["git status", "git check", "git diff --all", "git files"],
+          correctIndex: 0
+        },
+        {
+          objective: "See the exact line changes between the working directory and the last commit.",
+          options: ["git diff", "git changes", "git compare", "git log --diff"],
+          correctIndex: 0
+        },
+        {
+          objective: "Temporarily save uncommitted changes without committing them, so you can switch branches.",
+          options: ["git stash", "git save", "git pause", "git hold"],
+          correctIndex: 0
+        },
+        {
+          objective: "List all remote repositories connected to this project along with their URLs.",
+          options: ["git remote -v", "git remotes", "git origin list", "git show remotes"],
+          correctIndex: 0
+        },
+        {
+          objective: "Download new commits from the remote without merging them into your current branch.",
+          options: ["git fetch", "git pull --no-merge", "git download", "git sync"],
+          correctIndex: 0
+        },
+        {
+          objective: "Delete a local branch named 'old-feature' that has already been merged.",
+          options: ["git branch -d old-feature", "git delete old-feature", "git remove branch old-feature", "git branch --erase old-feature"],
+          correctIndex: 0
+        },
+        {
+          objective: "Tag the current commit as version 'v1.0.0'.",
+          options: ["git tag v1.0.0", "git version v1.0.0", "git mark v1.0.0", "git release v1.0.0"],
+          correctIndex: 0
+        },
+        {
+          objective: "Find out which commit last changed a specific line in a file (blame the author/commit).",
+          options: ["git blame filename", "git author filename", "git trace filename", "git history-line filename"],
+          correctIndex: 0
         }
       ];
 
@@ -3435,6 +4243,7 @@
         clearAnswerFeedbackTimers();
         gitScore = 0;
         lastGitChallenge = null;
+        resetQueue(gitQueueStore, "main", gitChallenges);
         document.querySelectorAll("#git-screen .answer-feedback").forEach((el) => el.remove());
         switchScreen("git-screen");
         nextGitRound();
@@ -3446,7 +4255,7 @@
         gitScoreText.innerText = `Score: ${gitScore}`;
         gitTimerText.innerText = `Time: ${gitTimer}s`;
 
-        currentGitObj = pickDifferent(gitChallenges, lastGitChallenge);
+        currentGitObj = drawFromQueue(gitQueueStore, "main", gitChallenges, lastGitChallenge);
         lastGitChallenge = currentGitObj;
         gitObjectiveText.innerText = `Task: ${currentGitObj.objective}`;
 
@@ -3473,9 +4282,25 @@
           gitTimerText.innerText = `Time: ${gitTimer}s`;
           if (gitTimer <= 0) {
             clearInterval(gitTimerInterval);
-            endGitGame();
+            handleGitTimeout();
           }
         }, 1000);
+      }
+
+      /* Ran out of time without picking — reveal the correct command in
+         green before ending, instead of cutting straight to game over. */
+      function handleGitTimeout() {
+        const buttons = gitOptionsContainer.querySelectorAll("button");
+        const correctButton = Array.from(buttons).find((button) => button.dataset.optionIndex === String(currentGitObj.correctIndex));
+        if (correctButton) correctButton.classList.add("answer-correct");
+        disableButtons(gitOptionsContainer);
+        showAnswerFeedback(
+          gitOptionsContainer.parentElement,
+          `Time's up! Correct answer: ${currentGitObj.options[currentGitObj.correctIndex]}`,
+          "wrong",
+          "git-answer-feedback"
+        );
+        scheduleAfterFeedback(() => endGitGame());
       }
 
       function checkGitAnswer(selectedIdx, correctIdx) {
@@ -3486,8 +4311,9 @@
 
         if (selectedIdx === correctIdx) {
           if (selectedButton) selectedButton.classList.add("answer-correct");
+          disableButtons(gitOptionsContainer);
           gitScore++;
-          nextGitRound();
+          scheduleAfterCorrect(() => nextGitRound());
         } else {
           if (selectedButton) selectedButton.classList.add("answer-wrong");
           if (correctButton) correctButton.classList.add("answer-correct");
@@ -3506,6 +4332,310 @@
         clearInterval(gitTimerInterval);
         gitFinalScoreText.innerText = `${gitScore}`;
         switchScreen("git-gameover-screen");
+      }
+
+
+      /* ==================== FLASH RECALL GAME LOGIC (KBC-style) ==================== */
+      const FLASH_PRECOUNT_MS = 450;
+      const FLASH_DISPLAY_MS = 200;
+      const FLASH_ANSWER_SECONDS = 8;
+      const flashWordQueueStore = {};
+      const flashNumberQueueStore = {};
+
+      /* Pre-generated pool of unique numbers (3, 4 & 5 digits, ~20 of each)
+         so the correct item is drawn from a no-repeat queue just like the
+         word pool — the same number can no longer show up round after
+         round, which was making the game feel predictable. */
+      function generateNumberPool() {
+        const pool = new Set();
+        [3, 4, 5].forEach((digits) => {
+          let count = 0;
+          while (count < 20) {
+            const num = generateFlashNumberWithDigits(digits);
+            if (!pool.has(num)) {
+              pool.add(num);
+              count++;
+            }
+          }
+        });
+        return Array.from(pool);
+      }
+
+      let flashScore = 0;
+      let flashTimer = FLASH_ANSWER_SECONDS;
+      let flashTimerInterval = null;
+      let flashRevealTimeout = null;
+      let currentFlashItem = null;
+      let currentFlashItemType = null;
+      let currentFlashCorrectIndex = null;
+      let currentFlashCorrectText = null;
+      let lastFlashItem = null;
+      let lastFlashType = null;
+      let flashTypeStreak = 0;
+      let numberPool = [];
+
+      const flashScoreText = document.getElementById("flash-score");
+      const flashTimerText = document.getElementById("flash-timer");
+      const flashStatusText = document.getElementById("flash-status-text");
+      const flashItemTextEl = document.getElementById("flash-item-text");
+      const flashOptionsContainer = document.getElementById("flash-options-container");
+      const flashFinalScoreText = document.getElementById("flash-final-score");
+
+      function startFlashRecallGame() {
+        clearAnswerFeedbackTimers();
+        clearInterval(flashTimerInterval);
+        clearTimeout(flashRevealTimeout);
+        flashScore = 0;
+        lastFlashItem = null;
+        lastFlashType = null;
+        flashTypeStreak = 0;
+        if (numberPool.length === 0) numberPool = generateNumberPool();
+        resetQueue(flashWordQueueStore, "main", wordPool);
+        resetQueue(flashNumberQueueStore, "main", numberPool);
+        document.querySelectorAll("#flashrecall-screen .answer-feedback").forEach((el) => el.remove());
+        switchScreen("flashrecall-screen");
+        nextFlashRound();
+      }
+
+      /* Generates a random number string with an exact digit count (no
+         leading zero), used both for the flashed item and its distractors. */
+      function generateFlashNumberWithDigits(digits) {
+        const min = Math.pow(10, digits - 1);
+        const max = Math.pow(10, digits) - 1;
+        return String(Math.floor(min + Math.random() * (max - min + 1)));
+      }
+
+      /* Builds the 4 KBC-style options (1 correct + 3 distractors) for the
+         item that was just flashed, shuffled so the correct answer isn't
+         always in the same slot. */
+      function buildFlashOptions(item, type) {
+        let distractors = [];
+        let correctText = "";
+
+        if (type === "word") {
+          correctText = item.toUpperCase();
+
+          // Text options are also intentionally very similar to the flashed word.
+          // Example: APPLE -> APPLY, APPLF, APPLE-like one-letter variations.
+          // This keeps the KBC-style challenge difficult instead of showing
+          // completely unrelated words.
+          const base = item.toUpperCase();
+          const alphabet = "ABCDEFGHIJKLMNOPQRSTUVWXYZ";
+          const seenWords = new Set([base]);
+
+          // First try one-character substitutions.
+          const positions = shuffleArray(
+            Array.from({ length: base.length }, (_, i) => i)
+          );
+
+          for (const pos of positions) {
+            if (distractors.length >= 3) break;
+            const original = base[pos];
+            const replacements = shuffleArray(
+              alphabet.split("").filter((ch) => ch !== original)
+            );
+            for (const replacement of replacements) {
+              if (distractors.length >= 3) break;
+              const chars = base.split("");
+              chars[pos] = replacement;
+              const candidate = chars.join("");
+              if (!seenWords.has(candidate)) {
+                seenWords.add(candidate);
+                distractors.push(candidate);
+              }
+            }
+          }
+
+          // If the word is extremely short, use nearby word-pool entries as
+          // a fallback so we always have exactly 3 options.
+          if (distractors.length < 3) {
+            const pool = shuffleArray(
+              wordPool.filter((w) => w.toUpperCase() !== base)
+            );
+            for (const w of pool) {
+              if (distractors.length >= 3) break;
+              const candidate = w.toUpperCase();
+              if (!seenWords.has(candidate)) {
+                seenWords.add(candidate);
+                distractors.push(candidate);
+              }
+            }
+          }
+        } else {
+          correctText = item;
+          const digits = item.length;
+          const numericItem = Number(item);
+          const min = Math.pow(10, digits - 1);
+          const max = Math.pow(10, digits) - 1;
+          const seen = new Set([item]);
+
+          // Number options are intentionally very close to the correct number,
+          // e.g. 1678 -> 1675, 1674, 1680, instead of unrelated random numbers.
+          // This makes the KBC-style recall much harder and more realistic.
+          const nearbyOffsets = shuffleArray([
+            -5, -4, -3, -2, -1,
+             1,  2,  3,  4,  5
+          ]);
+
+          for (const offset of nearbyOffsets) {
+            if (distractors.length >= 3) break;
+            const candidateNumber = numericItem + offset;
+            if (candidateNumber >= min && candidateNumber <= max) {
+              const candidate = String(candidateNumber);
+              if (!seen.has(candidate)) {
+                seen.add(candidate);
+                distractors.push(candidate);
+              }
+            }
+          }
+
+          // Safety fallback for edge cases near the minimum/maximum number.
+          while (distractors.length < 3) {
+            const candidate = generateFlashNumberWithDigits(digits);
+            if (!seen.has(candidate)) {
+              seen.add(candidate);
+              distractors.push(candidate);
+            }
+          }
+        }
+
+        const allOptions = shuffleArray([correctText, ...distractors]);
+        return { list: allOptions, correctIndex: allOptions.indexOf(correctText), correctText };
+      }
+
+      function nextFlashRound() {
+        document.querySelectorAll("#flashrecall-screen .answer-feedback").forEach((el) => el.remove());
+        clearInterval(flashTimerInterval);
+        clearTimeout(flashRevealTimeout);
+        flashOptionsContainer.innerHTML = "";
+        flashScoreText.innerText = `Score: ${flashScore}`;
+        flashTimerText.innerText = `Time: --`;
+        flashStatusText.innerText = "Watch closely...";
+        flashItemTextEl.className = "flash-item-placeholder";
+        flashItemTextEl.innerText = "Ready?";
+
+        /* Decide word vs number for this round. After 2 rounds of the same
+           type in a row, force a switch so the game doesn't fall into a
+           predictable "always numbers" or "always words" streak. */
+        let isNumber = Math.random() < 0.5;
+        if (flashTypeStreak >= 2) isNumber = lastFlashType !== "number";
+        const roundType = isNumber ? "number" : "word";
+        flashTypeStreak = roundType === lastFlashType ? flashTypeStreak + 1 : 1;
+        lastFlashType = roundType;
+
+        let itemValue;
+        if (isNumber) {
+          itemValue = drawFromQueue(flashNumberQueueStore, "main", numberPool, lastFlashItem);
+          currentFlashItemType = "number";
+        } else {
+          itemValue = drawFromQueue(flashWordQueueStore, "main", wordPool, lastFlashItem);
+          currentFlashItemType = "word";
+        }
+        currentFlashItem = itemValue;
+        lastFlashItem = itemValue;
+
+        /* Brief "get ready" pause, then flash the item for exactly
+           FLASH_DISPLAY_MS (0.2s), then hide it and reveal the options. */
+        flashRevealTimeout = setTimeout(() => {
+          flashItemTextEl.className = "flash-item-text";
+          flashItemTextEl.innerText = currentFlashItemType === "word" ? itemValue.toUpperCase() : itemValue;
+          flashRevealTimeout = setTimeout(() => {
+            flashItemTextEl.className = "flash-item-placeholder";
+            flashItemTextEl.innerText = "?";
+            showFlashOptions();
+          }, FLASH_DISPLAY_MS);
+        }, FLASH_PRECOUNT_MS);
+      }
+
+      function showFlashOptions() {
+        flashStatusText.innerText = "What did you see?";
+        const built = buildFlashOptions(currentFlashItem, currentFlashItemType);
+        currentFlashCorrectIndex = built.correctIndex;
+        currentFlashCorrectText = built.correctText;
+
+        flashOptionsContainer.innerHTML = "";
+        const labels = ["A", "B", "C", "D"];
+        built.list.forEach((optText, idx) => {
+          const btn = document.createElement("button");
+          btn.className = "sql-option-btn kbc-option-btn";
+          btn.dataset.optionIndex = String(idx);
+          const labelSpan = document.createElement("span");
+          labelSpan.className = "kbc-option-label";
+          labelSpan.innerText = `${labels[idx]})`;
+          const textSpan = document.createElement("span");
+          textSpan.innerText = optText;
+          btn.appendChild(labelSpan);
+          btn.appendChild(textSpan);
+          btn.onclick = () => checkFlashAnswer(idx, currentFlashCorrectIndex);
+          flashOptionsContainer.appendChild(btn);
+        });
+
+        startFlashTimer();
+      }
+
+      function startFlashTimer() {
+        clearInterval(flashTimerInterval);
+        flashTimer = FLASH_ANSWER_SECONDS;
+        flashTimerText.innerText = `Time: ${flashTimer}s`;
+        flashTimerInterval = setInterval(() => {
+          flashTimer--;
+          flashTimerText.innerText = `Time: ${flashTimer}s`;
+          if (flashTimer <= 0) {
+            clearInterval(flashTimerInterval);
+            handleFlashTimeout();
+          }
+        }, 1000);
+      }
+
+      /* Ran out of time without picking — reveal the correct answer in
+         green before ending, instead of cutting straight to game over. */
+      function handleFlashTimeout() {
+        const buttons = flashOptionsContainer.querySelectorAll("button");
+        const correctButton = buttons[currentFlashCorrectIndex];
+        if (correctButton) correctButton.classList.add("answer-correct");
+        disableButtons(flashOptionsContainer);
+        flashStatusText.innerText = "Time's up!";
+        showAnswerFeedback(
+          flashOptionsContainer.parentElement,
+          `Time's up! Correct answer: ${currentFlashCorrectText}`,
+          "wrong",
+          "flash-answer-feedback"
+        );
+        scheduleAfterFeedback(() => endFlashRecallGame());
+      }
+
+      function checkFlashAnswer(selectedIdx, correctIdx) {
+        clearInterval(flashTimerInterval);
+        const buttons = flashOptionsContainer.querySelectorAll("button");
+        const selectedButton = buttons[selectedIdx];
+        const correctButton = buttons[correctIdx];
+
+        if (selectedIdx === correctIdx) {
+          if (selectedButton) selectedButton.classList.add("answer-correct");
+          disableButtons(flashOptionsContainer);
+          flashScore++;
+          flashStatusText.innerText = "Correct!";
+          scheduleAfterCorrect(() => nextFlashRound());
+        } else {
+          if (selectedButton) selectedButton.classList.add("answer-wrong");
+          if (correctButton) correctButton.classList.add("answer-correct");
+          disableButtons(flashOptionsContainer);
+          flashStatusText.innerText = "Wrong!";
+          showAnswerFeedback(
+            flashOptionsContainer.parentElement,
+            `Wrong! Correct answer: ${currentFlashCorrectText}`,
+            "wrong",
+            "flash-answer-feedback"
+          );
+          scheduleAfterFeedback(() => endFlashRecallGame());
+        }
+      }
+
+      function endFlashRecallGame() {
+        clearInterval(flashTimerInterval);
+        clearTimeout(flashRevealTimeout);
+        flashFinalScoreText.innerText = `${flashScore}`;
+        switchScreen("flashrecall-gameover-screen");
       }
     </script>
   </body>
