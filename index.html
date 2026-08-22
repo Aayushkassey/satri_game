@@ -562,30 +562,6 @@
       color: #ef4444;
     }
 
-    .letter.current::before {
-      content: "";
-      position: absolute;
-      left: -2px;
-      top: 10%;
-      bottom: 10%;
-      width: 2.5px;
-      background-color: var(--accent-blue);
-      border-radius: 1px;
-      animation: flash 1s infinite;
-    }
-
-    @keyframes flash {
-
-      0%,
-      100% {
-        opacity: 1;
-      }
-
-      50% {
-        opacity: 0;
-      }
-    }
-
     .typing-input {
       position: absolute;
       top: 0;
@@ -2228,7 +2204,7 @@
 
         questionBank = loadedBank;
 
-        wordPool = (questionBank.typingWords || []).map(item => item.text);
+        wordPool = (questionBank.typingWords || []).map(item => String(item.text || "").replace(/[\-\u2010-\u2015]/g, ""));
         colors = buildRainbowColorRounds();
 
         bugFieldLabels = questionBank.bugHunter?.labels || {};
@@ -2327,7 +2303,6 @@
         const letterSpan = document.createElement("span");
         letterSpan.classList.add("letter");
         letterSpan.innerText = char;
-        if (markCurrent && i === 0) letterSpan.classList.add("current");
         wordDiv.appendChild(letterSpan);
       });
       return wordDiv;
@@ -2362,12 +2337,10 @@
         e.preventDefault();
         typingInput.value = "";
         if (currentLetterIndex === 0) return;
-        if (letters[currentLetterIndex]) letters[currentLetterIndex].classList.remove("current");
         currentWordIndex++;
         currentLetterIndex = 0;
         if (currentWordIndex >= typingWords.length - 8) appendMoreTypingWords();
         const nextWordEl = typingDisplay.children[currentWordIndex];
-        if (nextWordEl && nextWordEl.children[0]) nextWordEl.children[0].classList.add("current");
         updateLineScroll();
         typingInput.value = "";
         return;
@@ -2375,7 +2348,6 @@
 
       if (currentLetterIndex < letters.length) {
         const targetLetter = letters[currentLetterIndex];
-        targetLetter.classList.remove("current");
         if (lastChar === targetLetter.textContent) {
           targetLetter.classList.add("correct");
           correctCharsCount++;
@@ -2384,7 +2356,6 @@
           incorrectCharsCount++;
         }
         currentLetterIndex++;
-        if (currentLetterIndex < letters.length) letters[currentLetterIndex].classList.add("current");
         updateLineScroll();
       }
       typingInput.value = "";
@@ -2400,9 +2371,8 @@
       if (e.key === "Backspace") {
         e.preventDefault();
         if (currentLetterIndex > 0) {
-          if (letters[currentLetterIndex]) letters[currentLetterIndex].classList.remove("current");
-          currentLetterIndex--;
-          letters[currentLetterIndex].className = "letter current";
+            currentLetterIndex--;
+          letters[currentLetterIndex].className = "letter";
         }
         updateLineScroll();
         typingInput.value = "";
