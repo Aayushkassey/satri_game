@@ -1,174 +1,243 @@
-SATRI Arcade 🎮
-SATRI Arcade is a browser-based indoor game collection built for SATRI.
-It includes educational mini-games focused on programming, technology, memory, typing, problem solving, and general technical knowledge.
-🎮 Games
-⚡ Speed Typing — Type the displayed word as quickly and accurately as possible.
-🎨 Color Flash — Test your visual attention and reaction speed.
-🧠 Memory Grid — Memorize and reproduce the displayed pattern.
-🔤 Word Scramble — Unscramble the given letters using the provided clue.
-🐞 Bug Hunter — Find the incorrect line in a code snippet.
-🗄️ SQL Master — Test SQL and database knowledge.
-🌿 Git Master — Practice Git commands and version control concepts.
-🔢 Flash Recall — Memorize numbers and recall them correctly.
-📚 Question Bank
-The game uses an external `questions.json` question bank.
-500+ items for each main game
-13,000+ Bug Hunter challenges across 25 fields
-Randomized question selection
-No immediate question repeats
-Separate question history for each game
-Question history is stored locally in the browser
-Works on local development and Netlify
-Bug Hunter Fields
-Bug Hunter includes challenges from:
-Full Stack
-MERN
-React
-Next.js
-Laravel
-Django
-WordPress
-Flutter
-Cross Platform
-UI/UX
-Graphics
-Product Design
-Python
-Data
-IoT
-Smart IoT
-Cybersecurity
-QA
-DevOps
-Digital Marketing
-Social Media
-Content Marketing
-Project Based
-Internship
-GenAI
-📁 Project Structure
-```text
-SATRI GAME/
+<div align="center">
+
+# 🎮 SATRI Arcade
+
+**A browser-based arcade collection built for SATRI — 9 mini-games, 13,000+ questions, zero dependencies.**
+
+[![Version](https://img.shields.io/badge/version-2.1-blue.svg)]()
+[![License](https://img.shields.io/badge/license-MIT-green.svg)]()
+[![Platform](https://img.shields.io/badge/platform-browser-orange.svg)]()
+[![Netlify](https://img.shields.io/badge/deploy-Netlify-00C7B7.svg)](https://netlify.com)
+
+---
+
+*Type. Match. Remember. Unscramble. Hunt. Query. Commit. Recall. Snake.*
+
+</div>
+
+---
+
+## 🕹️ Games Overview
+
+| Game | Description | Mechanics | Questions |
+|------|-------------|-----------|-----------|
+| **⚡ Speed Typing** | Type tech words at max WPM | 30s timer, accuracy tracking | 520+ |
+| **🎨 Color Flash** | Ink vs word color match | Reflex test, 5% faster each round | 49 unique |
+| **🧠 Memory Grid** | Reproduce flashing patterns | Increasing sequence length | 520+ patterns |
+| **🔤 Word Scramble** | Unscramble with clues | 30s/word, contextual hints | 520+ |
+| **🐞 Bug Hunter** | Spot the buggy line | 25 fields, 15s timer | **13,000+** |
+| **🗄️ SQL Master** | Pick correct query | 15s, 4 options | 520+ |
+| **🌿 Git Master** | Pick correct command | 15s, 4 options | 520+ |
+| **🔢 Flash Recall** | Memorize & recall numbers | KBC-style, digits increase | 520+ |
+| **🐍 Snake** | Classic arcade | Keyboard + touch, high score | — |
+
+---
+
+## ✨ Key Features
+
+### 🎯 Smart No-Repeat Engine
+- **Per-game question history** stored in `localStorage`
+- Questions never repeat until the **entire pool is exhausted**
+- "Play Again" **continues from where you left off** — no fresh reset
+- Works offline (file://) and on Netlify
+
+### 📱 Fully Responsive
+- **Desktop**: Full viewport fit, keyboard controls
+- **Tablet**: Adaptive layout, touch optimized
+- **Mobile**: Compact UI, bottom controls, no scrolling
+
+### 🎨 Polished UI
+- Dark theme with SATRI branding
+- Smooth animations & feedback (green/red flashes)
+- Accessible: ARIA labels, focus states, touch-action
+
+### ⚡ Zero Build Step
+- Single `index.html` + `questions.json`
+- Runs by double-clicking or via any static host
+- Embedded fallback question bank for `file://` protocol
+
+---
+
+## 🚀 Quick Start
+
+```bash
+# Option 1: Double-click index.html
+# Option 2: VS Code Live Server
+# Option 3: Any static server
+npx serve .
+python -m http.server 8000
+```
+
+**Deploy to Netlify** — drag & drop the folder. Ensure both files are in root:
+```
+📁 your-site/
 ├── index.html
 ├── questions.json
-├── image.png
-└── README.md
+└── image.png
 ```
-🚀 Run Locally
-Open `index.html` in your browser.
-For the best local development experience, you can also use VS Code Live Server or another local HTTP server.
-The project includes a fallback question bank so the game can also work when `index.html` is opened directly.
-🌐 Deploy to Netlify
-Upload or deploy the project folder to Netlify.
-Make sure `index.html` and `questions.json` are in the same published folder:
-```text
-index.html
-questions.json
+
+---
+
+## 📂 Project Structure
+
 ```
-Netlify should be able to serve the question bank at:
-```text
-https://satrigames.netlify.app/questions.json
+SATRI GAME/
+├── index.html          # Complete game (HTML + CSS + JS)
+├── questions.json      # 15,000+ question bank
+├── image.png           # SATRI logo
+└── README.md           # This file
 ```
-No build step or separate JavaScript file is required.
-🔄 No-Repeat System
-SATRI Arcade uses a local no-repeat system.
-Questions already used in a game are stored in the browser's local storage. The game continues selecting unused items until the current pool has been completed, after which a new cycle begins.
-Each game has its own question history.
-Refreshing the page does not immediately reset the history.
-The question history can be reset using the Reset Question History option in the game.
-> Question history is stored per browser/device. Different players or devices have separate histories.
-📖 Question References
-The question bank contains original SATRI content and educational material prepared with reference to official documentation and trusted educational resources.
-Technology & Programming
-MDN Web Docs — Web development, JavaScript, HTML, and CSS
-https://developer.mozilla.org/
-React Documentation — React development and concepts
-https://react.dev/
-Next.js Documentation — Next.js development
-https://nextjs.org/docs
-Laravel Documentation — Laravel and PHP web development
-https://laravel.com/docs
-Django Documentation — Django and Python web development
-https://docs.djangoproject.com/
-WordPress Developer Resources — WordPress development
-https://developer.wordpress.org/
-Flutter Documentation — Flutter and cross-platform development
-https://docs.flutter.dev/
-Python Documentation — Python programming
-https://docs.python.org/3/
-Database & Version Control
-PostgreSQL Documentation — SQL and PostgreSQL concepts
-https://www.postgresql.org/docs/
-Git Documentation — Git commands and version control
-https://git-scm.com/docs
-Security & Other Topics
-OWASP — Web security and cybersecurity concepts
-https://owasp.org/
-Khan Academy — Statistics and probability concepts
-https://www.khanacademy.org/math/statistics-probability
-These references are used to keep the educational material aligned with real technologies, standard concepts, and commonly accepted practices.
-The SATRI question bank is not intended to reproduce these websites verbatim. The additional educational questions are original/template-generated content based on the referenced topics.
-🛠️ Adding Questions
-Additional questions can be added directly to `questions.json` without changing the game engine.
-SQL Example
+
+---
+
+## 🧠 Question Bank Details
+
+| Pool | Count | Source |
+|------|-------|--------|
+| Typing Words | 520+ | Tech vocabulary |
+| Color Rounds | 49 | Rainbow combinations |
+| Memory Patterns | 520+ | Unique sequences |
+| Scramble Words | 520+ | With contextual clues |
+| SQL Challenges | 520+ | Real query patterns |
+| Git Challenges | 520+ | Real commands |
+| Flash Items | 520+ | Number sequences |
+| **Bug Hunter** | **13,000+** | **25 specialized fields** |
+
+### Bug Hunter Fields (520 each)
+```
+Full Stack · MERN · React · Next.js · Laravel · Django · WordPress
+Flutter · Cross Platform · UI/UX · Graphics · Product Design
+Python · Data · IoT · Smart IoT · Cybersecurity · QA · DevOps
+Digital Marketing · Social Media · Content Marketing
+Project Based · Internship · GenAI
+```
+
+---
+
+## 🔧 Adding Custom Questions
+
+Edit `questions.json` — no code changes needed.
+
+### SQL Example
 ```json
 {
   "id": "sql-custom-001",
-  "objective": "Your question here",
+  "objective": "Get users with more than 5 orders",
   "options": [
-    "Correct answer",
-    "Wrong answer",
-    "Wrong answer",
-    "Wrong answer"
+    "SELECT u.* FROM users u JOIN orders o ON u.id = o.user_id GROUP BY u.id HAVING COUNT(*) > 5;",
+    "SELECT * FROM users WHERE orders > 5;",
+    "SELECT * FROM users HAVING COUNT(orders) > 5;",
+    "GET users WHERE order_count > 5;"
   ],
   "correctIndex": 0
 }
 ```
-Git Example
+
+### Git Example
 ```json
 {
   "id": "git-custom-001",
-  "objective": "Your Git task here",
+  "objective": "Undo last commit but keep changes staged",
   "options": [
-    "Correct command",
-    "Wrong command",
-    "Wrong command",
-    "Wrong command"
+    "git reset --soft HEAD~1",
+    "git reset --hard HEAD~1",
+    "git revert HEAD",
+    "git undo"
   ],
   "correctIndex": 0
 }
 ```
-Bug Hunter Example
+
+### Bug Hunter Example
 ```json
 {
   "id": "react-custom-001",
   "difficulty": "medium",
   "lines": [
-    "line 1",
-    "line 2",
-    "line 3",
-    "line 4"
+    "function UserCard({ user }) {",
+    "  const [name, setName] = useState(user.name);",
+    "  return <div onClick={() => setName('')}>{name}</div>;",
+    "}"
   ],
   "bugIndex": 2,
-  "explanation": "Explain why line 3 is incorrect."
+  "explanation": "Line 3: onClick clears name on every render due to missing dependency in useEffect (not shown) or should use callback."
 }
 ```
-`bugIndex` is zero-based:
-```text
-0 = line 1
-1 = line 2
-2 = line 3
-3 = line 4
-```
-⚠️ JSON Rules
-When editing `questions.json`:
-Use double quotes for keys and string values.
-Do not add trailing commas.
-Keep JSON valid.
-SQL and Git questions should contain exactly four options.
-`correctIndex` must be between `0` and `3`.
-Give every question a unique `id`.
-📌 Version
-Version: 2.0
+
+> `bugIndex` is **0-based**: line 1 = 0, line 2 = 1, etc.
+
 ---
-Built for SATRI 🎮
+
+## 📖 References & Attributions
+
+Questions curated from official documentation:
+
+| Technology | Source |
+|------------|--------|
+| Web APIs, JS, HTML, CSS | [MDN Web Docs](https://developer.mozilla.org/) |
+| React | [React.dev](https://react.dev/) |
+| Next.js | [Next.js Docs](https://nextjs.org/docs) |
+| Laravel | [Laravel Docs](https://laravel.com/docs) |
+| Django | [Django Docs](https://docs.djangoproject.com/) |
+| WordPress | [WP Developer Resources](https://developer.wordpress.org/) |
+| Flutter/Dart | [Flutter Docs](https://docs.flutter.dev/) |
+| Python | [Python Docs](https://docs.python.org/3/) |
+| PostgreSQL/SQL | [PostgreSQL Docs](https://www.postgresql.org/docs/) |
+| Git | [Git SCM Docs](https://git-scm.com/docs) |
+| Security | [OWASP](https://owasp.org/) |
+| Statistics | [Khan Academy](https://www.khanacademy.org/math/statistics-probability) |
+
+---
+
+## 🎯 Pro Tips
+
+- **Speed Typing**: Don't look at keyboard — watch the word preview
+- **Color Flash**: Focus on *ink color*, ignore the word meaning
+- **Memory Grid**: Chunk patterns into shapes (L, line, square)
+- **Word Scramble**: Read the clue first — it narrows possibilities
+- **Bug Hunter**: Scan for syntax errors first (missing `;`, `,`, brackets)
+- **SQL/Git**: Eliminate obviously wrong options first
+- **Flash Recall**: Verbalize the number while it flashes
+- **Snake**: Plan 2-3 moves ahead; use walls to turn sharply
+
+---
+
+## 📜 Version History
+
+| Version | Date | Changes |
+|---------|------|---------|
+| **2.1** | 2026-09-06 | Added Snake game; fixed no-repeat persistence; responsive viewport fit; bug fixes |
+| **2.0** | 2026-08 | External question bank; 13k Bug Hunter; no-repeat engine; Netlify support |
+| **1.0** | 2026-07 | Initial release with 8 games |
+
+---
+
+## 🤝 Contributing
+
+1. Fork the repo
+2. Add questions to `questions.json` (follow JSON rules)
+3. Test locally: `open index.html`
+4. Submit PR
+
+**JSON Rules:**
+- Double quotes for keys/strings
+- No trailing commas
+- Valid JSON only
+- SQL/Git: exactly 4 options, `correctIndex` 0-3
+- Unique `id` per question
+
+---
+
+## 📄 License
+
+MIT License — free to use, modify, distribute.
+
+---
+
+<div align="center">
+
+**Built with ❤️ for SATRI**
+
+[🌐 Play Now](https://satrigames.netlify.app) · [⭐ Star Repo](https://github.com/Aayushkassey)
+
+</div>

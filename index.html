@@ -117,6 +117,18 @@
       overflow: hidden;
     }
 
+    /* Snake screen specific */
+    #snake-screen .game-container {
+      padding: 1.5rem 1rem 1rem 1rem;
+      overflow: visible;
+    }
+
+    @media (max-width: 768px) {
+      #snake-screen .game-container {
+        padding: 1rem 0.5rem 0.5rem 0.5rem;
+      }
+    }
+
     .game-container.wide-mode {
       width: 1150px;
       max-width: 96vw;
@@ -189,8 +201,17 @@
       min-width: 0;
     }
 
+    #snake-screen {
+      height: 100%;
+      min-height: 0;
+    }
+
     .screen.active {
       display: flex;
+    }
+
+    .screen:not(.active) {
+      display: none !important;
     }
 
     /* =========================================================
@@ -393,6 +414,269 @@
 
     .memory-tile:active {
       transform: scale(0.95);
+    }
+
+    /* =========================================================
+     SNAKE GAME
+     ========================================================= */
+
+    .snake-canvas-wrapper {
+      position: relative;
+      width: 100%;
+      max-width: 640px;
+      margin: 0 auto;
+      background: #0f172a;
+      border: 2px solid rgba(255, 255, 255, 0.15);
+      border-radius: 0.75rem;
+      box-shadow: inset 0 0 30px rgba(0, 0, 0, 0.5), 0 0 20px rgba(34, 197, 94, 0.1);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      overflow: hidden;
+    }
+
+    #snake-canvas {
+      display: block;
+      max-width: 100%;
+      max-height: 100%;
+    }
+
+    @media (min-width: 769px) {
+      #snake-screen {
+        height: 100%;
+        max-height: 100%;
+        flex-direction: row;
+        flex-wrap: wrap;
+        align-content: flex-start;
+        align-items: flex-start;
+        justify-content: center;
+        gap: 1rem 1.5rem;
+      }
+
+      #snake-screen .game-container {
+        height: 100%;
+        max-height: 100%;
+        display: flex;
+        flex-direction: column;
+        padding: 1.5rem 1rem 1rem 1rem;
+      }
+
+      #snake-screen .game-main-panel {
+        flex: 1;
+        display: flex;
+        flex-direction: column;
+        min-height: 0;
+        overflow: hidden;
+      }
+
+      #snake-screen .snake-stats-row {
+        flex: 0 0 100%;
+        margin: 0 auto 0.5rem;
+      }
+
+      #snake-screen .snake-canvas-wrapper {
+        flex: 1 1 auto;
+        min-height: 0;
+        max-height: calc(100% - 90px);
+        max-width: 640px;
+        order: 1;
+      }
+
+      #snake-screen .snake-controls {
+        flex: 0 0 auto;
+        margin-top: 0;
+        margin-bottom: 0;
+        align-self: center;
+        order: 2;
+      }
+
+      #snake-screen #snake-controls {
+        display: flex;
+      }
+
+      #snake-screen .snake-desktop-hint {
+        display: none;
+      }
+    }
+
+    @media (max-width: 768px) {
+      #snake-screen .snake-desktop-hint {
+        display: none;
+      }
+
+      #snake-screen #snake-controls {
+        display: flex;
+      }
+    }
+
+    .snake-controls {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 0.5rem;
+      margin-top: 1rem;
+      width: 100%;
+    }
+
+    .snake-control-row {
+      display: flex;
+      gap: 0.5rem;
+      justify-content: center;
+    }
+
+    .snake-btn {
+      width: 56px;
+      height: 56px;
+      border-radius: 50%;
+      border: 2px solid rgba(255, 255, 255, 0.2);
+      background: rgba(15, 23, 42, 0.8);
+      color: #fff;
+      font-size: 1.5rem;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      touch-action: manipulation;
+      -webkit-tap-highlight-color: transparent;
+      transition: all 0.1s ease;
+    }
+
+    .snake-btn:active {
+      transform: scale(0.9);
+      background: rgba(59, 130, 246, 0.4);
+      border-color: var(--accent-blue);
+    }
+
+    .snake-btn:focus {
+      outline: 2px solid var(--accent-blue);
+      outline-offset: 2px;
+    }
+
+    .snake-stats-row {
+      display: flex;
+      justify-content: space-around;
+      width: 100%;
+      max-width: 500px;
+      margin: 1rem auto 0;
+      padding: 0 1rem;
+    }
+
+    .snake-stat {
+      text-align: center;
+    }
+
+    .snake-stat-label {
+      font-size: 0.75rem;
+      color: var(--text-muted);
+      text-transform: uppercase;
+      letter-spacing: 1px;
+    }
+
+    .snake-stat-value {
+      font-size: 1.5rem;
+      font-weight: bold;
+      color: #fff;
+    }
+
+    @media (max-width: 768px) {
+      .snake-btn {
+        width: 48px;
+        height: 48px;
+        font-size: 1.25rem;
+      }
+
+      .snake-stat-value {
+        font-size: 1.25rem;
+      }
+    }
+
+    @media (max-width: 480px) {
+      .snake-btn {
+        width: 44px;
+        height: 44px;
+        font-size: 1.1rem;
+      }
+
+      .snake-stats-row {
+        margin: 0.5rem auto 0;
+      }
+
+      .snake-stat-value {
+        font-size: 1.1rem;
+      }
+
+      .snake-canvas-wrapper {
+        max-width: 100%;
+        border-radius: 0.5rem;
+      }
+
+      .snake-controls {
+        gap: 0.35rem;
+        margin-top: 0.5rem;
+      }
+
+      .snake-control-row {
+        gap: 0.35rem;
+      }
+    }
+
+    @media (max-width: 360px) {
+      .snake-btn {
+        width: 40px;
+        height: 40px;
+        font-size: 1rem;
+      }
+
+      .snake-stat-value {
+        font-size: 1rem;
+      }
+
+      .snake-controls {
+        gap: 0.25rem;
+      }
+
+      .snake-control-row {
+        gap: 0.25rem;
+      }
+    }
+
+    /* Snake screen responsive height */
+    @media (max-width: 768px) {
+      #snake-screen {
+        display: flex;
+        flex-direction: column;
+        height: 100%;
+        max-height: 100vh;
+      }
+
+      #snake-screen .snake-stats-row {
+        flex-shrink: 0;
+        margin: 0.5rem auto 0;
+      }
+
+      #snake-screen .snake-canvas-wrapper {
+        flex: 1;
+        max-height: calc(100vh - 200px);
+        max-width: 100%;
+      }
+
+      #snake-screen .snake-controls {
+        flex-shrink: 0;
+        margin-top: 0.5rem;
+        margin-bottom: 0.5rem;
+      }
+    }
+
+    @media (max-width: 480px) {
+      #snake-screen .snake-canvas-wrapper {
+        max-height: calc(100vh - 180px);
+      }
+    }
+
+    @media (max-width: 360px) {
+      #snake-screen .snake-canvas-wrapper {
+        max-height: calc(100vh - 160px);
+      }
     }
 
     /* =========================================================
@@ -1634,6 +1918,354 @@
         font-size: 1.05rem;
       }
     }
+
+    /* =========================================================
+       SNAKE — LARGE DESKTOP BOARD + RIGHT-SIDE CONTROLS
+       Final override
+       ========================================================= */
+    @media (min-width: 769px) {
+      #snake-screen .game-container { width: min(1280px, 96vw); }
+
+      #game-card:has(#snake-screen.active) {
+        width: min(1280px, 96vw);
+      }
+
+      #snake-screen.active {
+        display: grid !important;
+        grid-template-columns: minmax(0, 1fr) 150px;
+        grid-template-rows: auto minmax(0, 1fr);
+        gap: 0.9rem 1.4rem;
+        align-items: center;
+        width: 100%;
+      }
+
+      #snake-screen .snake-stats-row {
+        grid-column: 1;
+        grid-row: 1;
+        width: min(720px, 100%);
+        max-width: 100%;
+        margin: 0 auto;
+      }
+
+      #snake-screen .snake-canvas-wrapper {
+        grid-column: 1;
+        grid-row: 2;
+        width: min(720px, 100%);
+        max-width: 100%;
+        aspect-ratio: 1 / 1;
+        height: auto;
+        min-height: 0;
+        max-height: none;
+        margin: 0 auto;
+      }
+
+      #snake-screen .snake-controls {
+        grid-column: 2;
+        grid-row: 1 / 3;
+        width: 150px;
+        margin: 0;
+        align-self: center;
+        justify-self: center;
+      }
+
+      #snake-screen .snake-desktop-hint {
+        display: none;
+      }
+
+      #snake-screen .snake-btn {
+        width: 62px;
+        height: 62px;
+        font-size: 1.65rem;
+      }
+    }
+
+    @media (max-width: 768px) {
+      #snake-screen.active {
+        display: flex !important;
+      }
+
+      #snake-screen .snake-canvas-wrapper {
+        aspect-ratio: 1 / 1;
+      }
+    }
+
+
+
+    /* =========================================================
+       SNAKE — FULL DESKTOP VIEWPORT (NO PAGE SCROLL)
+       ========================================================= */
+    @media (min-width: 769px) {
+      html, body { height: 100dvh; overflow: hidden; }
+      body { min-height: 100dvh; }
+      .main-content { min-height: 0; overflow: hidden; padding: 10px 18px; }
+
+      #game-card:has(#snake-screen.active) {
+        width: min(1500px, 94vw) !important;
+        max-width: 94vw !important;
+        height: 100%;
+        max-height: 100%;
+        margin: 0 auto;
+        padding: 14px 18px !important;
+        overflow: hidden;
+      }
+
+      #snake-screen.active {
+        display: grid !important;
+        grid-template-columns: minmax(0, 1fr) 190px;
+        grid-template-rows: 52px minmax(0, 1fr);
+        width: 100%;
+        height: 100%;
+        min-height: 0;
+        gap: 8px 1rem;
+        overflow: hidden;
+      }
+
+      #snake-screen .snake-controls {
+        grid-column: 2;
+        grid-row: 1 / 3;
+        align-self: center;
+        justify-self: center;
+      }
+
+      #snake-screen .snake-desktop-hint {
+        right: 0;
+        bottom: 8px;
+        width: 190px;
+      }
+
+      #snake-screen .snake-stats-row {
+        grid-column: 1;
+        grid-row: 1;
+        width: min(520px, 100%);
+        margin: 0 auto;
+        padding: 0;
+        align-self: center;
+      }
+
+      #snake-screen .snake-canvas-wrapper {
+        grid-column: 1;
+        grid-row: 2;
+        width: auto;
+        height: 100%;
+        max-width: min(100%, calc(100dvh - 190px));
+        max-height: 100%;
+        aspect-ratio: 1 / 1;
+        margin: 0 auto;
+        align-self: center;
+        justify-self: center;
+      }
+
+      /* Desktop/Laptop: use the real keyboard arrow keys. */
+      #snake-screen #snake-controls { display: none !important; }
+      #snake-screen .snake-desktop-hint {
+        display: block;
+        position: absolute;
+        right: 24px;
+        bottom: 14px;
+        margin: 0;
+        color: var(--text-muted);
+        font-size: 0.82rem;
+      }
+    }
+
+    @media (max-width: 768px) {
+      /* Mobile stays exactly with on-screen controls. */
+      #snake-screen #snake-controls { display: flex !important; }
+      #snake-screen .snake-desktop-hint { display: none !important; }
+    }
+
+  
+    /* =========================================================
+       SATRI FINAL UI POLISH
+       - Smaller Game Over card
+       - Clear desktop keyboard controls
+       - Faster-feeling mobile Snake touch controls
+       ========================================================= */
+
+    /* Keep Game Over screens compact instead of stretching to the
+       full desktop game-card width. */
+    #game-card:has(#snake-gameover-screen.active) {
+      width: min(620px, calc(100vw - 2rem)) !important;
+      max-width: calc(100vw - 2rem) !important;
+      padding: 2rem 1.5rem 1.5rem !important;
+    }
+
+    #game-card:has(#snake-gameover-screen.active) .screen.active {
+      width: 100%;
+      max-width: 100%;
+    }
+
+    #game-card:has(#snake-gameover-screen.active) h1 {
+      margin-top: 0.35rem;
+      margin-bottom: 0.8rem;
+    }
+
+    #game-card:has(#snake-gameover-screen.active) .final-score {
+      font-size: 2.35rem;
+      margin: 0.35rem 0 1rem;
+    }
+
+    #game-card:has(#snake-gameover-screen.active) .btn-start {
+      margin-top: 0.5rem;
+    }
+
+    /* Desktop Snake controls hint: WASD on the left, arrows on the
+       right, then Space for pause/resume. */
+    @media (min-width: 769px) {
+      /* Keep the Snake board centered, while controls stay at the
+         middle-right side of the game card. */
+      #snake-screen.active {
+        display: grid !important;
+        grid-template-columns: minmax(0, 1fr) 190px !important;
+        grid-template-rows: auto minmax(0, 1fr) !important;
+        column-gap: 1.2rem;
+        align-items: center;
+        position: relative;
+      }
+
+      #snake-screen .snake-stats-row {
+        grid-column: 1;
+        grid-row: 1;
+      }
+
+      #snake-screen .snake-canvas-wrapper {
+        grid-column: 1;
+        grid-row: 2;
+      }
+
+      #snake-screen .snake-controls {
+        grid-column: 2;
+        grid-row: 1 / 3;
+        width: 170px;
+        margin: 0 auto;
+        align-self: center;
+        justify-self: center;
+      }
+
+      #snake-screen .snake-desktop-hint {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        flex-wrap: wrap;
+        gap: 0.35rem;
+        position: absolute;
+        right: 0;
+        bottom: 8px;
+        width: 190px;
+        margin: 0;
+        color: #cbd5e1;
+        font-size: 0.78rem;
+        line-height: 1.35;
+        text-align: center;
+        white-space: normal;
+        pointer-events: none;
+      }
+
+      #snake-screen .control-group {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.18rem;
+      }
+
+      #snake-screen .control-group strong,
+      #snake-screen .space-key {
+        min-width: 25px;
+        height: 25px;
+        padding: 0 0.3rem;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        border: 1px solid rgba(255, 255, 255, 0.35);
+        border-radius: 5px;
+        background: rgba(15, 23, 42, 0.8);
+        color: #fff;
+        font-size: 0.76rem;
+        line-height: 1;
+        box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
+      }
+
+      #snake-screen .arrow-keys strong {
+        font-size: 1rem;
+      }
+
+      #snake-screen .space-key {
+        min-width: 58px;
+        font-weight: 700;
+        letter-spacing: 0.5px;
+      }
+
+      #snake-screen .control-separator {
+        color: #94a3b8;
+        margin: 0 0.15rem;
+      }
+    }
+
+
+    @media (min-width: 769px) {
+      #game-card:has(#snake-screen.active) {
+        width: min(1450px, 88vw) !important;
+        max-width: 88vw !important;
+      }
+
+      #snake-screen .snake-canvas-wrapper {
+        max-width: min(680px, 100%);
+      }
+    }
+
+
+    @media (min-width: 769px) {
+      #snake-screen .snake-controls {
+        position: absolute !important;
+        top: 22% !important;
+        right: 24px !important;
+        width: 180px !important;
+        margin: 0 !important;
+        transform: none !important;
+        z-index: 5;
+      }
+
+      #snake-screen .snake-desktop-hint {
+        right: 18px !important;
+        bottom: auto !important;
+        top: 58% !important;
+        width: 195px !important;
+        z-index: 5;
+      }
+    }
+
+    /* Mobile: eliminate tap delay/scroll interference and make the
+       controls react on pointer-down. */
+    .snake-btn {
+      touch-action: none;
+      user-select: none;
+      -webkit-user-select: none;
+      -webkit-touch-callout: none;
+    }
+
+    @media (max-width: 768px) {
+      #snake-screen .snake-controls {
+        touch-action: none;
+      }
+
+      #snake-screen .snake-btn {
+        transition: transform 0.06s ease, background-color 0.06s ease;
+      }
+
+      #snake-screen .snake-btn:active {
+        transform: scale(0.94);
+      }
+
+      #game-card:has(#snake-gameover-screen.active) {
+        width: 100% !important;
+        max-width: 100% !important;
+        padding: 1.6rem 1rem 1rem !important;
+      }
+
+      #game-card:has(#snake-gameover-screen.active) .final-score {
+        font-size: 2rem;
+      }
+    }
+
   </style>
 </head>
 
@@ -1659,6 +2291,10 @@
         <p style="text-align: center; margin-bottom: 0.5rem;">Choose an indoor game mode:</p>
         <p id="data-status" style="display:none;"></p>
         <div class="menu-grid">
+          <div class="menu-card" onclick="selectGame('snake')">
+            <h3>Snake</h3>
+            <p>Classic arcade snake game.</p>
+          </div>
           <div class="menu-card" onclick="selectGame('typing')">
             <h3>Speed Typing</h3>
             <p>Test WPM & accuracy.</p>
@@ -1974,6 +2610,58 @@
         <button class="btn-start" onclick="startFlashRecallGame()">Play Again</button>
       </div>
 
+      <!-- 9. SNAKE GAME SCREENS -->
+      <div id="snake-start-screen" class="screen">
+        <h1>Snake</h1>
+        <p style="text-align: center">Classic arcade snake game. Eat food to grow, avoid walls and yourself!</p>
+        <p style="text-align: center; font-size: 0.9rem; color: var(--text-muted); margin-top: 0.5rem;">Use arrow keys or on-screen controls</p>
+        <button class="btn-start" onclick="startSnakeGame()">Start Game</button>
+      </div>
+
+      <div id="snake-screen" class="screen">
+        <div class="snake-stats-row">
+          <div class="snake-stat">
+            <div class="snake-stat-label">Score</div>
+            <div id="snake-score" class="snake-stat-value">0</div>
+          </div>
+          <div class="snake-stat">
+            <div class="snake-stat-label">High Score</div>
+            <div id="snake-highscore" class="snake-stat-value">0</div>
+          </div>
+        </div>
+        <div class="snake-canvas-wrapper">
+          <canvas id="snake-canvas"></canvas>
+        </div>
+        <div class="snake-controls" id="snake-controls">
+          <div class="snake-control-row">
+            <button type="button" class="snake-btn" onpointerdown="snakeControlPointer(event, 0, -1)" aria-label="Up">▲</button>
+          </div>
+          <div class="snake-control-row">
+            <button type="button" class="snake-btn" onpointerdown="snakeControlPointer(event, -1, 0)" aria-label="Left">◄</button>
+            <button type="button" class="snake-btn" id="snake-pause-btn" onpointerdown="snakePausePointer(event)" aria-label="Pause">❚❚</button>
+            <button type="button" class="snake-btn" onpointerdown="snakeControlPointer(event, 1, 0)" aria-label="Right">►</button>
+          </div>
+          <div class="snake-control-row">
+            <button type="button" class="snake-btn" onpointerdown="snakeControlPointer(event, 0, 1)" aria-label="Down">▼</button>
+          </div>
+        </div>
+        <div id="snake-desktop-hint" class="snake-desktop-hint" aria-label="Snake keyboard controls">
+          <span class="control-group"><strong>W</strong><strong>A</strong><strong>S</strong><strong>D</strong></span>
+          <span class="control-separator">or</span>
+          <span class="control-group arrow-keys"><strong>↑</strong><strong>←</strong><strong>↓</strong><strong>→</strong></span>
+          <span class="control-separator">•</span>
+          <span class="space-key">SPACE</span>
+          <span>Pause / Resume</span>
+        </div>
+      </div>
+
+      <div id="snake-gameover-screen" class="screen">
+        <h1>Game Over!</h1>
+        <p style="text-align: center; color: #f8fafc;">Final Score:</p>
+        <div id="snake-final-score" class="final-score">0</div>
+        <button class="btn-start" onclick="startSnakeGame()">Play Again</button>
+      </div>
+
     </div>
   </div>
 
@@ -1992,7 +2680,10 @@
     let currentBackAction = null;
 
     function switchScreen(screenId) {
-      document.querySelectorAll(".screen").forEach((s) => s.classList.remove("active"));
+      document.querySelectorAll(".screen").forEach((s) => {
+        s.classList.remove("active");
+        s.style.display = "";
+      });
       document.getElementById(screenId).classList.add("active");
       updateBackButton(screenId);
     }
@@ -2025,6 +2716,8 @@
       clearInterval(gitTimerInterval);
       clearInterval(flashTimerInterval);
       clearTimeout(flashRevealTimeout);
+      if (snakeGameLoop) clearInterval(snakeGameLoop);
+      document.removeEventListener("keydown", handleSnakeKeydown);
       selectedBugField = null;
       gameCard.style.backgroundColor = "#1e293b";
       gameCard.classList.remove("wide-mode");
@@ -2035,7 +2728,8 @@
       if (!requireQuestionBank()) return;
 
       // Menu card -> game directly. No extra "Start" screen.
-      if (type === 'typing') startTypingGame();
+      if (type === 'snake') startSnakeGame();
+      else if (type === 'typing') startTypingGame();
       else if (type === 'color') startColorGame();
       else if (type === 'memory') startMemoryGame();
       else if (type === 'scramble') startScrambleGame();
@@ -2133,14 +2827,12 @@
       return choice;
     }
 
-    /* Start a completely fresh question cycle whenever a game is started
-       or "Play Again" is pressed. Repeats are still prevented during the
-       current play, but the next play gets a fresh set of questions. */
+    /* Start a completely fresh question cycle ONLY when the pool is exhausted.
+       "Play Again" now continues from where the player left off, preserving
+       the no-repeat history across game sessions. The pool resets automatically
+       when all questions have been used (handled in drawFromQueue). */
     function resetQueue(store, key, pool) {
       store[key] = [];
-      try {
-        localStorage.removeItem(persistentKey(key));
-      } catch (err) {}
     }
 
     /* ==================== RAINBOW COLOR BANK ====================
@@ -2242,7 +2934,7 @@
       return false;
     }
 /* ==================== MONKEYTYPE-STYLE ENGINE ==================== */
-    let wordPool = [];;
+    let wordPool = [];
 
     const GAME_DURATION = 30;
     let typingTimer = GAME_DURATION;
@@ -2400,11 +3092,13 @@
     }
 
     function appendMoreTypingWords() {
-      const extraWords = [...wordPool].sort(() => 0.5 - Math.random()).slice(0, 15);
-      extraWords.forEach((word) => {
-        typingWords.push(word);
-        typingDisplay.appendChild(buildWordEl(word, false));
-      });
+      for (let i = 0; i < 15; i++) {
+        const word = drawFromQueue(typingQueueStore, "typing", wordPool, typingWords[typingWords.length - 1]);
+        if (word) {
+          typingWords.push(word);
+          typingDisplay.appendChild(buildWordEl(word, false));
+        }
+      }
     }
 
     function startTypingTimer() {
@@ -2509,7 +3203,7 @@
     }
 
     /* ==================== COLOR FLASH GAME LOGIC ==================== */
-    let colors = [];;
+    let colors = [];
 
     const INITIAL_COLOR_TIME = 3000;
     let currentColorRound = 0;
@@ -2816,58 +3510,6 @@
     function getScrambleClue(word) {
       const w = String(word || "").trim().toLowerCase();
 
-      const clues = {
-        javascript: "A popular language used to make web pages interactive and dynamic.",
-        python: "A beginner-friendly language widely used for automation, data work and AI.",
-        html: "The markup language used to structure content on a web page.",
-        css: "The language used to style the layout, colors and appearance of web pages.",
-        react: "A JavaScript library commonly used to build user interfaces with components.",
-        node: "A JavaScript runtime that lets JavaScript run outside the browser.",
-        nodejs: "A JavaScript runtime that lets JavaScript run outside the browser.",
-        typescript: "A JavaScript-based language that adds static typing for larger applications.",
-        database: "A system used to store, organize and retrieve structured information.",
-        algorithm: "A step-by-step method used to solve a problem or complete a task.",
-        git: "A version-control tool used to track changes in code.",
-        github: "A platform where developers host code and collaborate on projects.",
-        docker: "A tool used to package applications and their dependencies into containers.",
-        linux: "An open-source operating system family widely used on servers and development machines.",
-        api: "A set of rules that lets different software systems communicate with each other.",
-        json: "A lightweight text format commonly used to exchange structured data.",
-        sql: "A language used to query and manage data in relational databases.",
-        frontend: "The part of a website or app that users directly see and interact with.",
-        backend: "The part of an application that handles server-side logic and data.",
-        compiler: "A program that translates source code into a form a computer can execute.",
-        variable: "A named place in a program used to store a value that can change.",
-        function: "A reusable block of code designed to perform a particular task.",
-        recursion: "A programming technique where a function solves a problem by calling itself.",
-        framework: "A reusable structure that provides tools and conventions for building software.",
-        browser: "Software used to open and interact with websites on the internet.",
-        server: "A computer or program that provides data or services to other computers.",
-        cache: "Temporary stored data used to make repeated access faster.",
-        debugging: "The process of finding and fixing problems in a program.",
-        cybersecurity: "The practice of protecting systems, networks and data from digital threats.",
-        encryption: "A technique used to protect information by transforming it into unreadable form.",
-        authentication: "The process of verifying who a user or system is.",
-        responsive: "A web-design approach that adapts a page to different screen sizes.",
-        component: "A reusable building block commonly used when constructing a user interface."
-      };
-
-      if (clues[w]) return clues[w];
-
-      // Generic clue fallback for words not in the built-in list.
-      if (w.includes("css") || w.includes("style")) return "A web-development concept related to how a page looks and is presented.";
-      if (w.includes("html") || w.includes("markup")) return "A web-development concept related to structuring content on a page.";
-      if (w.includes("sql") || w.includes("query")) return "A database-related concept used to work with stored information.";
-      if (w.includes("git") || w.includes("commit") || w.includes("branch")) return "A version-control concept used while managing code changes.";
-      if (w.includes("react") || w.includes("component")) return "A user-interface development concept involving reusable interface pieces.";
-      if (w.includes("python") || w.includes("java") || w.includes("script")) return "A programming-related term used when writing software.";
-      if (w.includes("cloud") || w.includes("server")) return "A computing concept related to running or delivering services over networks.";
-      return "A technology term related to programming, software or web development.";
-    }
-
-    function getScrambleClue(word) {
-      const w = String(word || "").trim().toLowerCase();
-
       const exactClues = {
         api: "A set of rules that lets different software systems communicate.",
         array: "A programming structure that stores multiple values in an ordered collection.",
@@ -3010,9 +3652,9 @@
 
 
     /* ==================== BUG HUNTER GAME LOGIC (Field-based, mapped to SATRI courses) ==================== */
-    let bugFieldLabels = {};;
+    let bugFieldLabels = {};
 
-    let bugFieldOrder = [];;
+    let bugFieldOrder = [];
 
     function renderBugFieldMenu() {
       const grid = document.getElementById("bugfield-menu-grid");
@@ -3152,7 +3794,7 @@
 
 
     /* ==================== SQL MASTER GAME LOGIC ==================== */
-    let sqlChallenges = [];;
+    let sqlChallenges = [];
 
     let sqlScore = 0;
     let sqlTimer = 15;
@@ -3263,7 +3905,7 @@
 
 
     /* ==================== GIT MASTER GAME LOGIC ==================== */
-    let gitChallenges = [];;
+    let gitChallenges = [];
 
     let gitScore = 0;
     let gitTimer = 15;
@@ -3627,6 +4269,338 @@
       clearTimeout(flashRevealTimeout);
       flashFinalScoreText.innerText = `${flashScore}`;
       switchScreen("flashrecall-gameover-screen");
+    }
+
+    /* ==================== SNAKE GAME LOGIC ==================== */
+    const SNAKE_GRID_SIZE = 20;
+    const SNAKE_INITIAL_SPEED = 150;
+    const SNAKE_SPEED_INCREMENT = 2;
+    const SNAKE_MIN_SPEED = 60;
+
+    let snakeCanvas = null;
+    let snakeCtx = null;
+    let snakeGrid = [];
+    let snakeDirection = { x: 1, y: 0 };
+    let snakeNextDirection = { x: 1, y: 0 };
+    let snakeSegments = [];
+    let snakeFood = { x: 0, y: 0 };
+    let snakeScore = 0;
+    let snakeHighScore = 0;
+    let snakeSpeed = SNAKE_INITIAL_SPEED;
+    let snakeGameLoop = null;
+    let snakeIsRunning = false;
+    let snakeIsPaused = false;
+    let snakePendingDirection = null;
+    let resizeCanvas = null;
+
+    const snakeScoreEl = document.getElementById("snake-score");
+    const snakeHighScoreEl = document.getElementById("snake-highscore");
+    const snakeFinalScoreEl = document.getElementById("snake-final-score");
+    const snakePauseBtn = document.getElementById("snake-pause-btn");
+
+function initSnakeCanvas() {
+      snakeCanvas = document.getElementById("snake-canvas");
+      if (!snakeCanvas) return;
+      snakeCtx = snakeCanvas.getContext("2d");
+
+      resizeCanvas = function() {
+        const wrapper = snakeCanvas.parentElement;
+        const rect = wrapper.getBoundingClientRect();
+        const availableWidth = rect.width - 4;
+        const availableHeight = rect.height - 4;
+        const maxDimension = Math.min(640, availableWidth, availableHeight);
+        const size = Math.max(
+          SNAKE_GRID_SIZE * 5,
+          Math.floor(maxDimension / SNAKE_GRID_SIZE) * SNAKE_GRID_SIZE
+        );
+        snakeCanvas.width = size;
+        snakeCanvas.height = size;
+        snakeCanvas.style.width = size + "px";
+        snakeCanvas.style.height = size + "px";
+      };
+
+      resizeCanvas();
+      window.addEventListener("resize", resizeCanvas);
+    }
+
+    function startSnakeGame() {
+      clearAnswerFeedbackTimers();
+      if (snakeGameLoop) clearInterval(snakeGameLoop);
+      document.removeEventListener("keydown", handleSnakeKeydown);
+
+      snakeIsRunning = true;
+      snakeIsPaused = false;
+      snakeScore = 0;
+      snakeSpeed = SNAKE_INITIAL_SPEED;
+      snakeDirection = { x: 1, y: 0 };
+      snakeNextDirection = { x: 1, y: 0 };
+      snakePendingDirection = null;
+
+      gameCard.classList.add("wide-mode");
+      switchScreen("snake-screen");
+
+      if (!snakeCtx) initSnakeCanvas();
+
+      // Keyboard controls are always registered on desktop/laptop.
+      document.addEventListener("keydown", handleSnakeKeydown, { passive: false });
+
+      // Wait until the desktop/mobile layout has its final size before
+      // calculating the grid. This prevents the snake from spawning on an
+      // invalid board and immediately ending the game.
+      requestAnimationFrame(() => {
+        requestAnimationFrame(() => {
+          resizeCanvas();
+
+          const gridCount = Math.max(10, Math.floor(snakeCanvas.width / SNAKE_GRID_SIZE));
+          const startX = Math.floor(gridCount / 2);
+          const startY = Math.floor(gridCount / 2);
+
+          snakeSegments = [
+            { x: startX, y: startY },
+            { x: startX - 1, y: startY },
+            { x: startX - 2, y: startY }
+          ];
+
+          snakeScoreEl.innerText = "0";
+          snakeHighScore = parseInt(localStorage.getItem("satri_snake_highscore") || "0", 10);
+          snakeHighScoreEl.innerText = snakeHighScore;
+          snakePauseBtn.innerText = "❚❚";
+          snakePauseBtn.setAttribute("aria-label", "Pause");
+
+          placeSnakeFood();
+          drawSnake();
+          startSnakeLoop();
+        });
+      });
+    }
+
+    function startSnakeLoop() {
+      if (snakeGameLoop) clearInterval(snakeGameLoop);
+      snakeGameLoop = setInterval(snakeGameStep, snakeSpeed);
+    }
+
+    function snakeGameStep() {
+      if (!snakeIsRunning || snakeIsPaused) return;
+
+      snakeDirection = { ...snakeNextDirection };
+
+      const head = { ...snakeSegments[0] };
+      head.x += snakeDirection.x;
+      head.y += snakeDirection.y;
+
+      const gridCount = snakeCanvas.width / SNAKE_GRID_SIZE;
+
+      if (head.x < 0 || head.x >= gridCount || head.y < 0 || head.y >= gridCount) {
+        endSnakeGame();
+        return;
+      }
+
+      const willEat = head.x === snakeFood.x && head.y === snakeFood.y;
+      // When not eating, the tail moves away on this same step, so it is safe
+      // for the head to enter the tail's previous cell.
+      const bodyToCheck = willEat ? snakeSegments : snakeSegments.slice(0, -1);
+      for (const segment of bodyToCheck) {
+        if (segment.x === head.x && segment.y === head.y) {
+          endSnakeGame();
+          return;
+        }
+      }
+
+      snakeSegments.unshift(head);
+
+      if (willEat) {
+        snakeScore += 10;
+        snakeScoreEl.innerText = snakeScore;
+        snakeSpeed = Math.max(SNAKE_MIN_SPEED, snakeSpeed - SNAKE_SPEED_INCREMENT);
+        startSnakeLoop();
+        placeSnakeFood();
+      } else {
+        snakeSegments.pop();
+      }
+
+      drawSnake();
+    }
+
+    function placeSnakeFood() {
+      const gridCount = snakeCanvas.width / SNAKE_GRID_SIZE;
+      let newFood;
+      do {
+        newFood = {
+          x: Math.floor(Math.random() * gridCount),
+          y: Math.floor(Math.random() * gridCount)
+        };
+      } while (snakeSegments.some(s => s.x === newFood.x && s.y === newFood.y));
+      snakeFood = newFood;
+    }
+
+    function drawSnake() {
+      if (!snakeCtx) return;
+      const gridCount = snakeCanvas.width / SNAKE_GRID_SIZE;
+      const cellSize = snakeCanvas.width / gridCount;
+
+      snakeCtx.fillStyle = "#0f172a";
+      snakeCtx.fillRect(0, 0, snakeCanvas.width, snakeCanvas.height);
+
+      snakeCtx.fillStyle = "#22c55e";
+      snakeSegments.forEach((segment, index) => {
+        const x = segment.x * cellSize;
+        const y = segment.y * cellSize;
+        const padding = 1;
+        const radius = index === 0 ? 4 : 2;
+
+        snakeCtx.beginPath();
+        snakeCtx.roundRect(x + padding, y + padding, cellSize - padding * 2, cellSize - padding * 2, radius);
+        snakeCtx.fill();
+
+        if (index === 0) {
+          snakeCtx.fillStyle = "#16a34a";
+          const eyeSize = Math.max(2, cellSize * 0.12);
+          const eyeOffset = cellSize * 0.25;
+          let eye1x, eye1y, eye2x, eye2y;
+
+          if (snakeDirection.x === 1) {
+            eye1x = x + cellSize - eyeOffset;
+            eye1y = y + eyeOffset;
+            eye2x = x + cellSize - eyeOffset;
+            eye2y = y + cellSize - eyeOffset;
+          } else if (snakeDirection.x === -1) {
+            eye1x = x + eyeOffset;
+            eye1y = y + eyeOffset;
+            eye2x = x + eyeOffset;
+            eye2y = y + cellSize - eyeOffset;
+          } else if (snakeDirection.y === -1) {
+            eye1x = x + eyeOffset;
+            eye1y = y + eyeOffset;
+            eye2x = x + cellSize - eyeOffset;
+            eye2y = y + eyeOffset;
+          } else {
+            eye1x = x + eyeOffset;
+            eye1y = y + cellSize - eyeOffset;
+            eye2x = x + cellSize - eyeOffset;
+            eye2y = y + cellSize - eyeOffset;
+          }
+          snakeCtx.beginPath();
+          snakeCtx.arc(eye1x, eye1y, eyeSize, 0, Math.PI * 2);
+          snakeCtx.arc(eye2x, eye2y, eyeSize, 0, Math.PI * 2);
+          snakeCtx.fill();
+          snakeCtx.fillStyle = "#22c55e";
+        }
+      });
+
+      snakeCtx.fillStyle = "#fbbf24";
+      snakeCtx.shadowColor = "#fbbf24";
+      snakeCtx.shadowBlur = 15;
+      const foodX = snakeFood.x * cellSize;
+      const foodY = snakeFood.y * cellSize;
+      const padding = 2;
+      snakeCtx.beginPath();
+      snakeCtx.arc(
+        foodX + cellSize / 2,
+        foodY + cellSize / 2,
+        (cellSize - padding * 2) / 2,
+        0,
+        Math.PI * 2
+      );
+      snakeCtx.fill();
+      snakeCtx.shadowBlur = 0;
+    }
+
+    function handleSnakeKeydown(e) {
+      if (!snakeIsRunning) return;
+
+      const key = e.key;
+      const isControlKey = [
+        "ArrowUp", "ArrowDown", "ArrowLeft", "ArrowRight",
+        "w", "W", "a", "A", "s", "S", "d", "D",
+        " ", "Spacebar", "Escape"
+      ].includes(key);
+
+      if (!isControlKey) return;
+      e.preventDefault();
+
+      // Space works as Pause / Resume even while the game is paused.
+      if (key === " " || key === "Spacebar" || key === "Escape") {
+        toggleSnakePause();
+        return;
+      }
+
+      if (snakeIsPaused) return;
+
+      switch (key) {
+        case "ArrowUp":
+        case "w":
+        case "W":
+          if (snakeDirection.y !== 1) snakeNextDirection = { x: 0, y: -1 };
+          break;
+        case "ArrowDown":
+        case "s":
+        case "S":
+          if (snakeDirection.y !== -1) snakeNextDirection = { x: 0, y: 1 };
+          break;
+        case "ArrowLeft":
+        case "a":
+        case "A":
+          if (snakeDirection.x !== 1) snakeNextDirection = { x: -1, y: 0 };
+          break;
+        case "ArrowRight":
+        case "d":
+        case "D":
+          if (snakeDirection.x !== -1) snakeNextDirection = { x: 1, y: 0 };
+          break;
+      }
+    }
+
+    // Pointer-down controls respond immediately on phones/tablets instead of
+    // waiting for the browser's click event. This makes mobile input feel
+    // much closer to desktop keyboard input.
+    function snakeControlPointer(e, x, y) {
+      if (e) {
+        e.preventDefault();
+        if (e.currentTarget && e.pointerId != null &&
+            e.currentTarget.setPointerCapture) {
+          try { e.currentTarget.setPointerCapture(e.pointerId); } catch (_) {}
+        }
+      }
+      snakeSetDirection(x, y);
+    }
+
+    function snakePausePointer(e) {
+      if (e) {
+        e.preventDefault();
+        if (e.currentTarget && e.pointerId != null &&
+            e.currentTarget.setPointerCapture) {
+          try { e.currentTarget.setPointerCapture(e.pointerId); } catch (_) {}
+        }
+      }
+      toggleSnakePause();
+    }
+
+    function snakeSetDirection(x, y) {
+      if (!snakeIsRunning || snakeIsPaused) return;
+      if (snakeDirection.x !== -x || snakeDirection.y !== -y) {
+        snakeNextDirection = { x, y };
+      }
+    }
+
+    function toggleSnakePause() {
+      if (!snakeIsRunning) return;
+      snakeIsPaused = !snakeIsPaused;
+      snakePauseBtn.innerText = snakeIsPaused ? "▶" : "❚❚";
+      snakePauseBtn.setAttribute("aria-label", snakeIsPaused ? "Resume" : "Pause");
+    }
+
+    function endSnakeGame() {
+      snakeIsRunning = false;
+      if (snakeGameLoop) clearInterval(snakeGameLoop);
+      document.removeEventListener("keydown", handleSnakeKeydown);
+
+      if (snakeScore > snakeHighScore) {
+        snakeHighScore = snakeScore;
+        localStorage.setItem("satri_snake_highscore", snakeHighScore.toString());
+        snakeHighScoreEl.innerText = snakeHighScore;
+      }
+      snakeFinalScoreEl.innerText = snakeScore;
+      switchScreen("snake-gameover-screen");
     }
 
     /* Load the external JSON bank once the UI/functions are ready. */
